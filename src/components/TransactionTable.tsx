@@ -1,5 +1,5 @@
 // src/components/TransactionTable.tsx
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,12 +31,14 @@ interface TransactionTableProps {
   transactions: Transaction[];
   globalFilter?: string;
   onGlobalFilterChange?: (value: string) => void;
+  onFilteredRowsChange?: (filteredTransactions: Transaction[]) => void;
 }
 
 export function TransactionTable({
   transactions,
   globalFilter = '',
   onGlobalFilterChange,
+  onFilteredRowsChange,
 }: TransactionTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const navigate = useNavigate();
@@ -149,6 +151,14 @@ export function TransactionTable({
       },
     },
   });
+
+  // Notify parent of filtered rows whenever they change
+  useEffect(() => {
+    if (onFilteredRowsChange) {
+      const filteredRows = table.getFilteredRowModel().rows.map((row) => row.original);
+      onFilteredRowsChange(filteredRows);
+    }
+  }, [table, onFilteredRowsChange, globalFilter, transactions]);
 
   return (
     <div className="space-y-4">

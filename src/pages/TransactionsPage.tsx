@@ -11,35 +11,12 @@ import { useMemo, useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { Transaction } from '@/types/transaction';
 
-// Simple filter function that matches TanStack Table's global filter behavior
-function filterTransactions(transactions: Transaction[], filter: string): Transaction[] {
-  if (!filter) return transactions;
-
-  const lowerFilter = filter.toLowerCase();
-  return transactions.filter((transaction) => {
-    // Search across all string fields
-    return (
-      transaction.id?.toString().toLowerCase().includes(lowerFilter) ||
-      transaction.description?.toLowerCase().includes(lowerFilter) ||
-      transaction.bankName?.toLowerCase().includes(lowerFilter) ||
-      transaction.accountId?.toLowerCase().includes(lowerFilter) ||
-      transaction.type?.toLowerCase().includes(lowerFilter) ||
-      transaction.amount?.toString().includes(lowerFilter)
-    );
-  });
-}
-
 export function TransactionsPage() {
   const { data: transactions, isLoading, error, refetch } = useTransactions();
   const [globalFilter, setGlobalFilter] = useState('');
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
 
-  // Filter transactions based on search query
-  const filteredTransactions = useMemo(() => {
-    if (!transactions) return [];
-    return filterTransactions(transactions, globalFilter);
-  }, [transactions, globalFilter]);
-
-  // Calculate stats from FILTERED transactions
+  // Calculate stats from FILTERED transactions (provided by the table)
   const stats = useMemo(() => {
     if (!filteredTransactions.length) return null;
 
@@ -148,6 +125,7 @@ export function TransactionsPage() {
                 transactions={transactions}
                 globalFilter={globalFilter}
                 onGlobalFilterChange={setGlobalFilter}
+                onFilteredRowsChange={setFilteredTransactions}
               />
             )}
           </CardContent>
