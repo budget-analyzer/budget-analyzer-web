@@ -1,5 +1,5 @@
 // src/hooks/useTransactions.ts
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseQueryResult } from '@tanstack/react-query';
 import { Transaction } from '@/types/transaction';
 import { transactionApi } from '@/api/transactionApi';
 import { mockTransactions } from '@/api/mockData';
@@ -47,5 +47,25 @@ export const useTransaction = (id: number): UseQueryResult<Transaction, ApiError
     staleTime: 1000 * 60 * 5,
     retry: 1,
     enabled: !!id,
+  });
+};
+
+export const useDeleteTransaction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, ApiError, number>({
+    mutationFn: async (id: number) => {
+      if (USE_MOCK_DATA) {
+        // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        // In mock mode, just simulate success
+        return;
+      }
+      return transactionApi.deleteTransaction(id);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch transactions list
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
   });
 };

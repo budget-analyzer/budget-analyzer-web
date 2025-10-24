@@ -15,4 +15,7 @@ export const handlers = [
       },
     ]);
   }),
+  http.delete('/api/transactions/:id', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];

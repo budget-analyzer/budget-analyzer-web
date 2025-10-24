@@ -4,6 +4,7 @@ import { Layout } from '@/components/Layout';
 import { TransactionsPage } from '@/pages/TransactionsPage';
 import { TransactionDetailPage } from '@/pages/TransactionDetailPage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Toaster } from 'sonner';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="transactions/:id" element={<TransactionDetailPage />} />
         </Route>
       </Routes>
+      <Toaster richColors position="top-right" />
     </ErrorBoundary>
   );
 }
