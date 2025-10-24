@@ -13,6 +13,10 @@ export const transactionApi = {
     return response.data;
   },
 
+  deleteTransaction: async (id: number): Promise<void> => {
+    await apiClient.delete(`/transactions/${id}`);
+  },
+
   importTransactions: async (file: File): Promise<Transaction[]> => {
     const formData = new FormData();
     formData.append('file', file);
