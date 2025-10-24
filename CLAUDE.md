@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Budget Analyzer Client is a React 19 application for managing and analyzing financial transactions. Built with TypeScript, Vite, and modern React patterns including React Query for server state and Redux Toolkit for UI state.
 
+### API Contract
+
+**OpenAPI Specification**: [/docs/budget-analyzer-api.yaml](docs/budget-analyzer-api.yaml)
+
+**IMPORTANT**: Always read this file at the start of new conversations to get the current API endpoint definitions, request/response schemas, and error formats. The spec is the source of truth for the Budget Analyzer API contract.
+
 ## Development Commands
 
 ### Building and Running
