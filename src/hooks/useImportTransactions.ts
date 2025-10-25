@@ -7,18 +7,18 @@ import { ApiError } from '@/types/apiError';
 
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
-export const useImportTransactions = (): UseMutationResult<Transaction[], ApiError, File> => {
+export const useImportTransactions = (): UseMutationResult<Transaction[], ApiError, File[]> => {
   const queryClient = useQueryClient();
 
-  return useMutation<Transaction[], ApiError, File>({
-    mutationFn: async (file: File) => {
+  return useMutation<Transaction[], ApiError, File[]>({
+    mutationFn: async (files: File[]) => {
       if (USE_MOCK_DATA) {
         // Simulate network delay
         await new Promise((resolve) => setTimeout(resolve, 1000));
         // Return a subset of mock transactions to simulate import
-        return mockTransactions.slice(0, 3);
+        return mockTransactions.slice(0, files.length * 3);
       }
-      return transactionApi.importTransactions(file);
+      return transactionApi.importTransactions(files);
     },
     onSuccess: () => {
       // Invalidate transactions query to refetch the updated list

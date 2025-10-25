@@ -17,9 +17,11 @@ export const transactionApi = {
     await apiClient.delete(`/transactions/${id}`);
   },
 
-  importTransactions: async (file: File): Promise<Transaction[]> => {
+  importTransactions: async (files: File[]): Promise<Transaction[]> => {
     const formData = new FormData();
-    formData.append('file', file);
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
 
     const response = await apiClient.post<Transaction[]>(
       '/transactions/import?format=capital-one&accountId=checking-12345',
