@@ -14,9 +14,10 @@ export function ImportButton({ onSuccess, onError }: ImportButtonProps) {
   const { mutate: importTransactions, isPending } = useImportTransactions();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      importTransactions(file, {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      importTransactions(fileArray, {
         onSuccess: (data) => {
           // Clear the file input
           if (fileInputRef.current) {
@@ -41,6 +42,7 @@ export function ImportButton({ onSuccess, onError }: ImportButtonProps) {
         ref={fileInputRef}
         type="file"
         accept=".csv"
+        multiple
         onChange={handleFileChange}
         className="hidden"
         aria-label="CSV file input"

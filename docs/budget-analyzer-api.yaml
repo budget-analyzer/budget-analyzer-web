@@ -46,7 +46,7 @@ paths:
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481777893Z
+                timestamp: 2025-10-25T07:44:13.258834646Z
         "200":
           description: Search completed without errors
           content:
@@ -66,7 +66,7 @@ paths:
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481794923Z
+                timestamp: 2025-10-25T07:44:13.258852288Z
         "400":
           description: Bad Request
           content:
@@ -78,13 +78,14 @@ paths:
                 title: Bad Request
                 status: 400
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481938465Z
+                timestamp: 2025-10-25T07:44:13.258983419Z
   /transactions/import:
     post:
       tags:
       - Transaction Handler
-      summary: Upload a CSV file containing transactions
-      description: Imports transactions from a CSV file for a given account and format.
+      summary: Upload CSV file(s) containing transactions
+      description: Imports transactions from one or more CSV files for a given account
+        and format.
       operationId: importTransactions
       parameters:
       - name: format
@@ -107,12 +108,14 @@ paths:
             schema:
               type: object
               properties:
-                file:
-                  type: string
-                  format: binary
-                  description: CSV file to upload
+                files:
+                  type: array
+                  description: CSV file(s) to upload
+                  items:
+                    type: string
+                    format: binary
               required:
-              - file
+              - files
         required: true
       responses:
         "500":
@@ -126,7 +129,7 @@ paths:
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481943308Z
+                timestamp: 2025-10-25T07:44:13.258988466Z
         "200":
           description: Transactions imported successfully
           content:
@@ -153,7 +156,7 @@ paths:
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481945068Z
+                timestamp: 2025-10-25T07:44:13.258990174Z
         "400":
           description: Bad Request
           content:
@@ -165,7 +168,7 @@ paths:
                 title: Bad Request
                 status: 400
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481946479Z
+                timestamp: 2025-10-25T07:44:13.258991633Z
   /transactions:
     get:
       tags:
@@ -185,7 +188,7 @@ paths:
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481948454Z
+                timestamp: 2025-10-25T07:44:13.258993627Z
         "200":
           description: List of transactions
           content:
@@ -205,7 +208,7 @@ paths:
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481949793Z
+                timestamp: 2025-10-25T07:44:13.258994988Z
         "404":
           description: Not Found
           content:
@@ -217,7 +220,7 @@ paths:
                 title: Not Found
                 status: 404
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481958329Z
+                timestamp: 2025-10-25T07:44:13.258997648Z
   /transactions/{id}:
     get:
       tags:
@@ -244,7 +247,7 @@ paths:
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481960486Z
+                timestamp: 2025-10-25T07:44:13.258999660Z
         "200":
           description: Transaction found
           content:
@@ -262,7 +265,7 @@ paths:
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481961997Z
+                timestamp: 2025-10-25T07:44:13.259001194Z
         "404":
           description: Not Found
           content:
@@ -274,7 +277,7 @@ paths:
                 title: Not Found
                 status: 404
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481963215Z
+                timestamp: 2025-10-25T07:44:13.259002481Z
     delete:
       tags:
       - Transaction Handler
@@ -300,7 +303,7 @@ paths:
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481964367Z
+                timestamp: 2025-10-25T07:44:13.259003799Z
         "204":
           description: Transaction deleted successfully
         "503":
@@ -314,7 +317,7 @@ paths:
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481965658Z
+                timestamp: 2025-10-25T07:44:13.259005Z
         "404":
           description: Not Found
           content:
@@ -326,7 +329,7 @@ paths:
                 title: Not Found
                 status: 404
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-24T14:15:01.481966751Z
+                timestamp: 2025-10-25T07:44:13.259006164Z
 components:
   schemas:
     ApiErrorResponse:
