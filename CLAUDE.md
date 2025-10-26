@@ -178,6 +178,37 @@ Required variables (see `.env.example`):
   - `true` - Use static mocks
   - `false` - Make real API calls
 
+## Code Quality Standards
+
+### Architecture Principles
+
+- **Production Parity**: All development configurations should work identically in production. Avoid dev-only hacks or workarounds.
+- **Explicit over Clever**: Prefer verbose, clear code over "clever" solutions that are hard to understand or maintain.
+- **Question Complexity**: If a solution requires unusual workarounds (DNS resolvers, custom builds, non-standard patterns), challenge whether it's the right approach.
+- **No Magic**: Avoid configurations that require "magic" environment-specific settings (special DNS servers, undocumented assumptions, etc.).
+
+### When Suggesting Solutions
+
+**IMPORTANT**: When proposing technical solutions, especially for infrastructure/configuration:
+
+1. **Explain tradeoffs** - Don't just provide a solution, explain pros/cons
+2. **Flag code smells** - If something feels hacky, say so upfront
+3. **Offer alternatives** - Present multiple approaches (simple vs. complex)
+4. **Production implications** - Explicitly state if something won't work the same in production
+5. **Ask for feedback** - When there are multiple valid approaches, ask which the user prefers
+
+### Red Flags to Avoid
+
+- ❌ Solutions that require DNS resolvers for internal routing
+- ❌ Configurations that only work in Docker/dev but not production
+- ❌ "Magic" environment variables or undocumented dependencies
+- ❌ Workarounds that add fragility (race conditions, timing dependencies)
+- ❌ Performance penalties hidden by "it works" (unnecessary DNS lookups, extra network hops)
+
+### When in Doubt
+
+If a solution requires more than 2 lines of explanation for "why this works", it's probably too complex. Step back and find a simpler approach.
+
 ## Important Implementation Notes
 
 **Theme Persistence**: Theme state lives in Redux but is synced to localStorage and DOM class (`dark`) via the `uiSlice` reducers. On initial load, theme is read from localStorage (see `src/store/uiSlice.ts:11`).
