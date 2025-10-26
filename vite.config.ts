@@ -11,6 +11,6 @@ export default defineConfig({
   server: {
     port: 3000,
     host: '0.0.0.0', // Allow Docker to access the dev server
-    open: true,
+    open: 'http://localhost:8080', // Open via NGINX gateway instead of direct dev server
   }
 });
