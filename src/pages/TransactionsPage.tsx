@@ -158,7 +158,7 @@ export function TransactionsPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">View and manage your financial transactions</p>
+          <p className="text-muted-foreground">View and manage transactions</p>
         </div>
         <ImportButton
           onSuccess={(count) => {
