@@ -1,30 +1,36 @@
 openapi: 3.1.0
 info:
-  title: Budget Analyzer API
-  description: API documentation for Budget Analyzer resources
+  title: Budget Analyzer - Unified API
+  version: '1.0'
+  description: Unified API documentation for all Budget Analyzer microservices. This
+    specification combines the Budget Analyzer API and Currency Service into a single
+    document for client code generation.
   contact:
     name: Bleu Rubin
     email: support@bleurubin.com
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  version: "1.0"
-externalDocs:
-  description: Find more info here
-  url: https://github.com/bleurubin/budget-analyzer-api
 servers:
-- url: http://localhost:8080/budget-analyzer-api
-  description: Local environment
+- url: http://localhost:8080/api
+  description: Local environment (via gateway)
 - url: https://api.bleurubin.com
   description: Production environment
 tags:
-- name: Transaction Handler
-  description: Endpoints for operations on transactions
+- name: Transactions
+  description: Import and manipulate transactions
+  x-service: budget-analyzer-api
+- name: Currency Handler
+  description: Endpoints for operations on currencies
+  x-service: currency-service
+- name: Exchange Rates Handler
+  description: Endpoints for operations on exchange rates
+  x-service: currency-service
 paths:
   /transactions/search:
     post:
       tags:
-      - Transaction Handler
+      - Transactions
       summary: Search transactions
       description: Paginated search over transactions
       operationId: searchTransactions
@@ -32,57 +38,57 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransactionFilter"
+              $ref: '#/components/schemas/TransactionFilter'
         required: true
       responses:
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: internal_server_error
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258834646Z
-        "200":
+                timestamp: '2025-10-26T11:00:10.930264185Z'
+        '200':
           description: Search completed without errors
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transaction"
-        "503":
+                  $ref: '#/components/schemas/Transaction'
+        '503':
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: service_unavailable
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258852288Z
-        "400":
+                timestamp: '2025-10-26T11:00:10.930284570Z'
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: bad_request
                 title: Bad Request
                 status: 400
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258983419Z
+                timestamp: '2025-10-26T11:00:10.930417867Z'
   /transactions/import:
     post:
       tags:
-      - Transaction Handler
+      - Transactions
       summary: Upload CSV file(s) containing transactions
       description: Imports transactions from one or more CSV files for a given account
         and format.
@@ -118,113 +124,113 @@ paths:
               - files
         required: true
       responses:
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: internal_server_error
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258988466Z
-        "200":
+                timestamp: '2025-10-26T11:00:10.930423345Z'
+        '200':
           description: Transactions imported successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transaction"
-        "422":
+                  $ref: '#/components/schemas/Transaction'
+        '422':
           description: Request was correctly formatted but there were business rules
             violated by the request so it couldn't be processed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
-        "503":
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '503':
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: service_unavailable
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258990174Z
-        "400":
+                timestamp: '2025-10-26T11:00:10.930424991Z'
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: bad_request
                 title: Bad Request
                 status: 400
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258991633Z
+                timestamp: '2025-10-26T11:00:10.930426320Z'
   /transactions:
     get:
       tags:
-      - Transaction Handler
+      - Transactions
       summary: Get transactions
       description: Get all transactions
       operationId: getTransactions
       responses:
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: internal_server_error
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258993627Z
-        "200":
+                timestamp: '2025-10-26T11:00:10.930428253Z'
+        '200':
           description: List of transactions
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transaction"
-        "503":
+                  $ref: '#/components/schemas/Transaction'
+        '503':
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: service_unavailable
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258994988Z
-        "404":
+                timestamp: '2025-10-26T11:00:10.930429484Z'
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: not_found
                 title: Not Found
                 status: 404
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258997648Z
+                timestamp: '2025-10-26T11:00:10.930432851Z'
   /transactions/{id}:
     get:
       tags:
-      - Transaction Handler
+      - Transactions
       summary: Get transaction
       description: Get transaction by id
       operationId: getTransaction
@@ -236,51 +242,51 @@ paths:
           type: integer
           format: int64
       responses:
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: internal_server_error
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.258999660Z
-        "200":
+                timestamp: '2025-10-26T11:00:10.930434719Z'
+        '200':
           description: Transaction found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Transaction"
-        "503":
+                $ref: '#/components/schemas/Transaction'
+        '503':
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: service_unavailable
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.259001194Z
-        "404":
+                timestamp: '2025-10-26T11:00:10.930435947Z'
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: not_found
                 title: Not Found
                 status: 404
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.259002481Z
+                timestamp: '2025-10-26T11:00:10.930437146Z'
     delete:
       tags:
-      - Transaction Handler
+      - Transactions
       summary: Delete transaction
       description: Delete transaction by id
       operationId: deleteTransaction
@@ -292,44 +298,264 @@ paths:
           type: integer
           format: int64
       responses:
-        "500":
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: internal_server_error
                 title: Internal Server Error
                 status: 500
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.259003799Z
-        "204":
+                timestamp: '2025-10-26T11:00:10.930438463Z'
+        '204':
           description: Transaction deleted successfully
-        "503":
+        '503':
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: service_unavailable
                 title: Service Unavailable
                 status: 503
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.259005Z
-        "404":
+                timestamp: '2025-10-26T11:00:10.930439609Z'
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiErrorResponse"
+                $ref: '#/components/schemas/ApiErrorResponse'
               example:
                 type: not_found
                 title: Not Found
                 status: 404
                 instance: /budget-analyzer-api/transactions
-                timestamp: 2025-10-25T07:44:13.259006164Z
+                timestamp: '2025-10-26T11:00:10.930440722Z'
+  /exchange-rates/import:
+    post:
+      tags:
+      - Exchange Rates Handler
+      summary: Import CSV file containing USD exchange rate series from FRED
+      description: Imports USD exchange rates in the format provided by FRED, i.e.
+        https://fred.stlouisfed.org/series/DEXTHUS
+      operationId: importExchangeRates
+      parameters:
+      - name: baseCurrency
+        in: query
+        description: Base currency for exchange rate series.  Currently only supports
+          USD.
+        required: false
+        schema:
+          type: string
+          default: USD
+        example: USD
+      - name: targetCurrency
+        in: query
+        description: Target currency for exchange rate series.  Currently only supports
+          THB.
+        required: true
+        schema:
+          type: string
+          default: THB
+        example: THB
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV file to upload
+              required:
+              - file
+        required: true
+      responses:
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: internal_server_error
+                title: Internal Server Error
+                status: 500
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246670149Z'
+        '200':
+          description: Exchange rates imported successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExchangeRateResponse'
+        '422':
+          description: Request was correctly formatted but there were business rules
+            violated by the request so it couldn't be processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: service_unavailable
+                title: Service Unavailable
+                status: 503
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246701230Z'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: bad_request
+                title: Bad Request
+                status: 400
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246823856Z'
+  /exchange-rates:
+    get:
+      tags:
+      - Exchange Rates Handler
+      summary: Get exchange rates
+      description: Get exchange rates for converting USD to the target currency
+      operationId: getTransactions
+      parameters:
+      - name: startDate
+        in: query
+        description: Start date for exchange rates in ISO format
+        required: false
+        schema:
+          type: string
+          format: date
+        example: '2024-01-01'
+      - name: endDate
+        in: query
+        description: End date for exchange rates in ISO format
+        required: false
+        schema:
+          type: string
+          format: date
+        example: '2024-12-31'
+      - name: targetCurrency
+        in: query
+        description: Target currency of exchange rate
+        required: true
+        schema:
+          type: string
+        example: THB
+      responses:
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: internal_server_error
+                title: Internal Server Error
+                status: 500
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246828535Z'
+        '200':
+          description: List of exchange rates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExchangeRateResponse'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: service_unavailable
+                title: Service Unavailable
+                status: 503
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246830211Z'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: not_found
+                title: Not Found
+                status: 404
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246832998Z'
+  /currencies:
+    get:
+      tags:
+      - Currency Handler
+      summary: Get supported currencies
+      description: Get a list of currencies that have exchange rate data
+      operationId: getSupportedCurrencies
+      responses:
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: internal_server_error
+                title: Internal Server Error
+                status: 500
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246835131Z'
+        '200':
+          description: List of currencies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: service_unavailable
+                title: Service Unavailable
+                status: 503
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246836350Z'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                type: not_found
+                title: Not Found
+                status: 404
+                instance: /currency-service/rates
+                timestamp: '2025-10-26T11:26:33.246837569Z'
 components:
   schemas:
     ApiErrorResponse:
@@ -361,12 +587,12 @@ components:
           type: string
           format: date-time
           description: Timestamp of the error in ISO-8601 format
-          example: 2023-10-15T14:30:00.500Z
+          example: '2023-10-15T14:30:00.500Z'
         errors:
           type: array
           description: List of field-level validation errors (optional)
           items:
-            $ref: "#/components/schemas/FieldError"
+            $ref: '#/components/schemas/FieldError'
       required:
       - instance
       - status
@@ -413,12 +639,12 @@ components:
           type: string
           format: date
           description: Start date for transaction date range
-          example: 2025-10-01
+          example: '2025-10-01'
         dateTo:
           type: string
           format: date
           description: End date for transaction date range
-          example: 2025-10-14
+          example: '2025-10-14'
         currencyIsoCode:
           type: string
           description: ISO currency code for the transaction
@@ -446,22 +672,22 @@ components:
           type: string
           format: date-time
           description: Start of creation timestamp range
-          example: 2025-10-14T00:00:00Z
+          example: '2025-10-14T00:00:00Z'
         createdBefore:
           type: string
           format: date-time
           description: End of creation timestamp range
-          example: 2025-10-15T00:00:00Z
+          example: '2025-10-15T00:00:00Z'
         updatedAfter:
           type: string
           format: date-time
           description: Start of last update timestamp range
-          example: 2025-10-14T00:00:00Z
+          example: '2025-10-14T00:00:00Z'
         updatedBefore:
           type: string
           format: date-time
           description: End of last update timestamp range
-          example: 2025-10-15T00:00:00Z
+          example: '2025-10-15T00:00:00Z'
     Transaction:
       type: object
       description: Transaction entity representing a financial transaction
@@ -483,7 +709,7 @@ components:
           type: string
           format: date
           description: Date of the transaction
-          example: 2025-10-14
+          example: '2025-10-14'
         currencyIsoCode:
           type: string
           description: ISO currency code for the transaction
@@ -507,12 +733,12 @@ components:
           type: string
           format: date-time
           description: Timestamp when the transaction was created
-          example: 2025-10-14T12:34:56Z
+          example: '2025-10-14T12:34:56Z'
         updatedAt:
           type: string
           format: date-time
           description: Timestamp when the transaction was last updated
-          example: 2025-10-14T12:34:56Z
+          example: '2025-10-14T12:34:56Z'
         deleted:
           type: boolean
         deletedAt:
@@ -528,3 +754,59 @@ components:
       - id
       - type
       - updatedAt
+    ExchangeRateResponse:
+      type: object
+      description: 'Exchange rate '
+      properties:
+        baseCurrency:
+          type: object
+          description: Base currency for conversion (currently only USD supported)
+          example: USD
+          properties:
+            currencyCode:
+              type: string
+            displayName:
+              type: string
+            symbol:
+              type: string
+            defaultFractionDigits:
+              type: integer
+              format: int32
+            numericCode:
+              type: integer
+              format: int32
+            numericCodeAsString:
+              type: string
+        targetCurrency:
+          type: object
+          description: Target currency for conversion (currently only THB supported)
+          example: THB
+          properties:
+            currencyCode:
+              type: string
+            displayName:
+              type: string
+            symbol:
+              type: string
+            defaultFractionDigits:
+              type: integer
+              format: int32
+            numericCode:
+              type: integer
+              format: int32
+            numericCodeAsString:
+              type: string
+        date:
+          type: string
+          format: date
+          description: Date for the given rate
+          example: 32.68
+        rate:
+          type: number
+          description: Exchange rate for the given date
+          example: 32.68
+      required:
+      - baseCurrency
+      - date
+      - rate
+      - targetCurrency
