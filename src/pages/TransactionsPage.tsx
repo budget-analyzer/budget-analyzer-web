@@ -1,6 +1,7 @@
 // src/pages/TransactionsPage.tsx
 import { motion } from 'framer-motion';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useExchangeRatesMap } from '@/hooks/useCurrencies';
 import { TransactionTable } from '@/components/TransactionTable';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -12,9 +13,14 @@ import { useMemo, useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { Transaction } from '@/types/transaction';
 import { differenceInDays, parseISO } from 'date-fns';
+import { useAppSelector } from '@/store/hooks';
 
 export function TransactionsPage() {
   const { data: transactions, isLoading, error, refetch } = useTransactions();
+  const displayCurrency = useAppSelector((state) => state.ui.displayCurrency);
+
+  // Fetch exchange rates and build map for currency conversion
+  const { exchangeRatesMap } = useExchangeRatesMap();
   const [globalFilter, setGlobalFilter] = useState('');
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [importMessage, setImportMessage] = useState<{
@@ -247,6 +253,8 @@ export function TransactionsPage() {
                 onFilteredRowsChange={setFilteredTransactions}
                 dateFilter={dateFilter}
                 onDateFilterChange={handleDateFilterChange}
+                displayCurrency={displayCurrency}
+                exchangeRatesMap={exchangeRatesMap}
               />
             )}
           </CardContent>
