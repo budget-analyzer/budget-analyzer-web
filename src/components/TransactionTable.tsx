@@ -286,6 +286,11 @@ export function TransactionTable({
     autoResetPageIndex: false,
   });
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    dispatch(setTransactionTablePageIndex(0));
+  }, [globalFilter, dateFilter, dispatch]);
+
   // Notify parent of filtered rows whenever they change
   useEffect(() => {
     if (onFilteredRowsChange) {
