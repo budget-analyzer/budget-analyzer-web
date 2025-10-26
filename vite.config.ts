@@ -10,16 +10,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: '0.0.0.0', // Allow Docker to access the dev server
     open: true,
-    proxy: {
-      // Proxy API requests during development
-      '/api': {
-        target: 'http://localhost:8080/budget-analyzer-api',
-        changeOrigin: true,
-        secure: false,
-        // optional: rewrite "/api" prefix if backend doesn’t expect it
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
   }
 });

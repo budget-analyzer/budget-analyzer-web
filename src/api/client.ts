@@ -2,7 +2,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import { ApiError, ApiErrorResponse } from '@/types/apiError';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/budget-analyzer-api';
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL,
