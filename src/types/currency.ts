@@ -27,4 +27,5 @@ export interface ExchangeRateResponse {
   targetCurrency: Currency;
   date: string; // ISO date format
   rate: number;
+  publishedDate: string; // ISO date format
 }

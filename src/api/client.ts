@@ -30,30 +30,18 @@ apiClient.interceptors.response.use(
     if (error.response?.data) {
       // API returned a structured error
       const apiErrorResponse = error.response.data;
-      throw new ApiError(
-        error.response.status,
-        apiErrorResponse,
-        apiErrorResponse.detail || apiErrorResponse.title,
-      );
+      throw new ApiError(error.response.status, apiErrorResponse, apiErrorResponse.message);
     } else if (error.request) {
       // Request made but no response received
       throw new ApiError(503, {
-        type: 'network_error',
-        title: 'Network Error',
-        status: 503,
-        detail: 'Unable to reach the server. Please check your connection.',
-        instance: error.config?.url || '',
-        timestamp: new Date().toISOString(),
+        type: 'SERVICE_UNAVAILABLE',
+        message: 'Unable to reach the server. Please check your connection.',
       });
     } else {
       // Something else happened
       throw new ApiError(500, {
-        type: 'unknown_error',
-        title: 'Unknown Error',
-        status: 500,
-        detail: error.message,
-        instance: '',
-        timestamp: new Date().toISOString(),
+        type: 'INTERNAL_ERROR',
+        message: error.message,
       });
     }
   },

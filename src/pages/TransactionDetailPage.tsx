@@ -56,13 +56,14 @@ export function TransactionDetailPage() {
       exchangeRatesMap,
     );
 
-    // Get the exchange rate used
-    const rate = exchangeRatesMap.get(transaction.date);
+    // Get the full exchange rate response from the map
+    const exchangeRateResponse = exchangeRatesMap.get(transaction.date);
 
     return {
       needsConversion: true as const,
       convertedAmount,
-      rate,
+      rate: exchangeRateResponse?.rate,
+      publishedDate: exchangeRateResponse?.publishedDate,
       sourceCurrency,
       targetCurrency: displayCurrency,
     };
@@ -268,9 +269,17 @@ export function TransactionDetailPage() {
                         ? conversionInfo.targetCurrency
                         : 'USD'}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      FRED daily spot rate for {formatDate(transaction.date)}
-                    </p>
+                    {conversionInfo.publishedDate && (
+                      <p
+                        className={`text-xs mt-1 ${
+                          conversionInfo.publishedDate !== transaction.date
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
+                        FRED daily spot rate published on {formatDate(conversionInfo.publishedDate)}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

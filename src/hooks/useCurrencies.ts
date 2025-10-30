@@ -104,7 +104,7 @@ export const useExchangeRatesMap = () => {
   });
 
   const exchangeRatesMap = useMemo(() => {
-    if (!exchangeRatesData) return new Map<string, number>();
+    if (!exchangeRatesData) return new Map<string, ExchangeRateResponse>();
     return buildExchangeRateMap(exchangeRatesData);
   }, [exchangeRatesData]);
 

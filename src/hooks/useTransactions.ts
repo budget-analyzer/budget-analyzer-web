@@ -32,12 +32,8 @@ export const useTransaction = (id: number): UseQueryResult<Transaction, ApiError
         const transaction = mockTransactions.find((t) => t.id === id);
         if (!transaction) {
           throw new ApiError(404, {
-            type: 'not_found',
-            title: 'Transaction Not Found',
-            status: 404,
-            detail: `Transaction with ID ${id} could not be located.`,
-            instance: `/transactions/${id}`,
-            timestamp: new Date().toISOString(),
+            type: 'NOT_FOUND',
+            message: `Transaction with ID ${id} could not be located.`,
           });
         }
         return transaction;
