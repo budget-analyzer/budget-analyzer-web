@@ -27,14 +27,14 @@ export function ErrorBanner({ error, onRetry }: ErrorBannerProps) {
 
   const getErrorTitle = () => {
     if (isApiError) {
-      return error.response.title;
+      return error.response.message;
     }
     return 'An Error Occurred';
   };
 
   const getErrorDetail = () => {
-    if (isApiError) {
-      return error.response.detail || error.message;
+    if (isApiError && error.response.code) {
+      return `Error code: ${error.response.code}`;
     }
     return error.message;
   };

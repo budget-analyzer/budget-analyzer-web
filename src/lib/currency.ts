@@ -2,14 +2,16 @@
 import { ExchangeRateResponse } from '@/types/currency';
 
 /**
- * Build a Map of date -> exchange rate for fast O(1) lookups
+ * Build a Map of date -> exchange rate response for fast O(1) lookups
  * @param rates Array of exchange rate responses from API
- * @returns Map with date string (YYYY-MM-DD) as key and rate as value
+ * @returns Map with date string (YYYY-MM-DD) as key and full ExchangeRateResponse as value
  */
-export function buildExchangeRateMap(rates: ExchangeRateResponse[]): Map<string, number> {
-  const map = new Map<string, number>();
+export function buildExchangeRateMap(
+  rates: ExchangeRateResponse[],
+): Map<string, ExchangeRateResponse> {
+  const map = new Map<string, ExchangeRateResponse>();
   rates.forEach((rate) => {
-    map.set(rate.date, rate.rate);
+    map.set(rate.date, rate);
   });
   return map;
 }
@@ -22,7 +24,7 @@ export function buildExchangeRateMap(rates: ExchangeRateResponse[]): Map<string,
  * @param date Transaction date (YYYY-MM-DD)
  * @param sourceCurrency Source currency code (e.g., 'THB')
  * @param targetCurrency Target currency code (e.g., 'USD')
- * @param ratesMap Map of dates to exchange rates (for sourceCurrency -> targetCurrency)
+ * @param ratesMap Map of dates to exchange rate responses
  * @returns Converted amount in target currency
  */
 export function convertCurrency(
@@ -30,22 +32,24 @@ export function convertCurrency(
   date: string,
   sourceCurrency: string,
   targetCurrency: string,
-  ratesMap: Map<string, number>,
+  ratesMap: Map<string, ExchangeRateResponse>,
 ): number {
   // No conversion needed if currencies are the same
   if (sourceCurrency === targetCurrency) {
     return amount;
   }
 
-  // Get the rate for this date
-  const rate = ratesMap.get(date);
+  // Get the exchange rate response for this date
+  const exchangeRateResponse = ratesMap.get(date);
 
   // If no rate found, return original amount
   // This shouldn't happen if API guarantees coverage, but defensive programming
-  if (!rate) {
+  if (!exchangeRateResponse) {
     console.warn(`No exchange rate found for ${date}, ${sourceCurrency} -> ${targetCurrency}`);
     return amount;
   }
+
+  const rate = exchangeRateResponse.rate;
 
   // Apply conversion
   // Note: Exchange rates are stored as baseCurrency (USD) -> targetCurrency

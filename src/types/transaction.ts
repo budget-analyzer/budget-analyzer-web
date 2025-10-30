@@ -12,6 +12,8 @@ export interface Transaction {
   description: string;
   createdAt: string;
   updatedAt: string;
+  deleted?: boolean;
+  deletedAt?: string;
 }
 
 export interface TransactionFilter {

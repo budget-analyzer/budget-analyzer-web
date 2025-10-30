@@ -10,6 +10,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { Transaction } from '@/types/transaction';
+import { ExchangeRateResponse } from '@/types/currency';
 import {
   Table,
   TableBody,
@@ -66,7 +67,7 @@ interface TransactionTableProps {
   transactions: Transaction[];
   onFilteredRowsChange?: (filteredTransactions: Transaction[]) => void;
   displayCurrency: string;
-  exchangeRatesMap: Map<string, number>;
+  exchangeRatesMap: Map<string, ExchangeRateResponse>;
 }
 
 export function TransactionTable({

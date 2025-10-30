@@ -1,6 +1,6 @@
 // src/api/transactionApi.ts
 import { apiClient } from './client';
-import { Transaction } from '@/types/transaction';
+import { Transaction, TransactionFilter } from '@/types/transaction';
 
 export const transactionApi = {
   getTransactions: async (): Promise<Transaction[]> => {
@@ -10,6 +10,11 @@ export const transactionApi = {
 
   getTransaction: async (id: number): Promise<Transaction> => {
     const response = await apiClient.get<Transaction>(`/transactions/${id}`);
+    return response.data;
+  },
+
+  searchTransactions: async (filter: TransactionFilter): Promise<Transaction[]> => {
+    const response = await apiClient.post<Transaction[]>('/transactions/search', filter);
     return response.data;
   },
 

@@ -28,30 +28,35 @@ export const mockExchangeRates: ExchangeRateResponse[] = [
     targetCurrency: mockTHB,
     date: '2025-10-10',
     rate: 33.5,
+    publishedDate: '2025-10-10',
   },
   {
     baseCurrency: mockUSD,
     targetCurrency: mockTHB,
     date: '2025-10-11',
     rate: 33.48,
+    publishedDate: '2025-10-11',
   },
   {
     baseCurrency: mockUSD,
     targetCurrency: mockTHB,
     date: '2025-10-12',
     rate: 33.52,
+    publishedDate: '2025-10-12',
   },
   {
     baseCurrency: mockUSD,
     targetCurrency: mockTHB,
     date: '2025-10-13',
     rate: 33.45,
+    publishedDate: '2025-10-13',
   },
   {
     baseCurrency: mockUSD,
     targetCurrency: mockTHB,
     date: '2025-10-14',
     rate: 33.51,
+    publishedDate: '2025-10-14',
   },
 ];
 
