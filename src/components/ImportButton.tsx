@@ -12,9 +12,10 @@ import {
 } from '@/components/ui/Select';
 import { useImportTransactions } from '@/hooks/useImportTransactions';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Transaction } from '@/types/transaction';
 
 interface ImportButtonProps {
-  onSuccess?: (count: number) => void;
+  onSuccess?: (count: number, transactions: Transaction[]) => void;
   onError?: (error: Error) => void;
 }
 
@@ -57,7 +58,7 @@ export function ImportButton({ onSuccess, onError }: ImportButtonProps) {
           setFormat('');
           setAccountId('');
           setIsExpanded(false);
-          onSuccess?.(data.length);
+          onSuccess?.(data.length, data);
         },
         onError: (error) => {
           onError?.(error);

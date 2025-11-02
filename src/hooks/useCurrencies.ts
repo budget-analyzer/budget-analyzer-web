@@ -108,5 +108,22 @@ export const useExchangeRatesMap = () => {
     return buildExchangeRateMap(exchangeRatesData);
   }, [exchangeRatesData]);
 
-  return { exchangeRatesMap, exchangeRatesData, ...rest };
+  // Memoized sorted array of all exchange rate dates (ascending order)
+  const sortedExchangeRateDates = useMemo(() => {
+    if (!exchangeRatesData || exchangeRatesData.length === 0) return [];
+    return exchangeRatesData.map((rate) => rate.date).sort();
+  }, [exchangeRatesData]);
+
+  // Memoized earliest exchange rate date
+  const earliestExchangeRateDate = useMemo(() => {
+    return sortedExchangeRateDates[0] || null;
+  }, [sortedExchangeRateDates]);
+
+  return {
+    exchangeRatesMap,
+    exchangeRatesData,
+    sortedExchangeRateDates,
+    earliestExchangeRateDate,
+    ...rest,
+  };
 };
