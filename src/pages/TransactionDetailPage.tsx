@@ -282,7 +282,7 @@ export function TransactionDetailPage() {
                       >
                         {conversionInfo.usedFallbackRate ? (
                           <>
-                            Rate from {formatDate(conversionInfo.rateDate)} (most recent available)
+                            Rate from {formatDate(conversionInfo.rateDate)} (nearest available)
                             <span className="block mt-0.5 text-muted-foreground">
                               FRED daily spot rate published on{' '}
                               {formatDate(conversionInfo.publishedDate)}

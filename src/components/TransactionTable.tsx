@@ -51,7 +51,6 @@ import {
   X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { motion } from 'framer-motion';
 import { useDeleteTransaction } from '@/hooks/useTransactions';
 import { toast } from 'sonner';
 import { DateRangeFilter } from './DateRangeFilter';
@@ -85,8 +84,23 @@ export function TransactionTable({
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [localSearchValue, setLocalSearchValue] = useState(globalFilter ?? '');
   const navigate = useNavigate();
   const { mutate: deleteTransaction, isPending: isDeleting } = useDeleteTransaction();
+
+  // Debounce search input: update Redux state 400ms after user stops typing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      dispatch(setTransactionTableGlobalFilter(localSearchValue));
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [localSearchValue, dispatch]);
+
+  // Sync local state when Redux state changes externally (e.g., clear filters button)
+  useEffect(() => {
+    setLocalSearchValue(globalFilter ?? '');
+  }, [globalFilter]);
 
   // Apply date filtering to transactions
   const filteredByDate = useMemo(() => {
@@ -330,13 +344,13 @@ export function TransactionTable({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search transactions..."
-            value={globalFilter ?? ''}
-            onChange={(e) => dispatch(setTransactionTableGlobalFilter(e.target.value))}
+            value={localSearchValue}
+            onChange={(e) => setLocalSearchValue(e.target.value)}
             className="pl-9 pr-9"
           />
-          {globalFilter && (
+          {localSearchValue && (
             <button
-              onClick={() => dispatch(setTransactionTableGlobalFilter(''))}
+              onClick={() => setLocalSearchValue('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               title="Clear search"
             >
@@ -380,21 +394,18 @@ export function TransactionTable({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, index) => (
-                <motion.tr
+              table.getRowModel().rows.map((row) => (
+                <TableRow
                   key={row.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.03 }}
                   onClick={() => navigate(`/transactions/${row.original.id}`)}
-                  className="cursor-pointer border-b transition-colors hover:bg-muted/50"
+                  className="cursor-pointer"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
-                </motion.tr>
+                </TableRow>
               ))
             ) : (
               <TableRow>

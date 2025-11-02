@@ -20,7 +20,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { Transaction } from '@/types/transaction';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useAppSelector } from '@/store/hooks';
@@ -31,15 +31,26 @@ export function TransactionsPage() {
   const displayCurrency = useAppSelector((state) => state.ui.displayCurrency);
 
   // Fetch exchange rates and build map for currency conversion
-  const { exchangeRatesMap } = useExchangeRatesMap();
+  const { exchangeRatesMap, earliestExchangeRateDate } = useExchangeRatesMap();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [importMessage, setImportMessage] = useState<{
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'warning';
     text: string;
   } | null>(null);
 
+  // Memoize the earliest rate text since it only depends on memoized values
+  const earliestRateText = useMemo(() => {
+    if (!earliestExchangeRateDate) return null;
+    const earliestRate = exchangeRatesMap.get(earliestExchangeRateDate);
+    const formattedDate = formatDate(earliestExchangeRateDate);
+    return earliestRate
+      ? `the rate of ${earliestRate.rate.toFixed(4)} THB/USD from ${formattedDate}`
+      : `the earliest available rate from ${formattedDate}`;
+  }, [earliestExchangeRateDate, exchangeRatesMap]);
+
   // Calculate stats from FILTERED transactions (provided by the table)
   // Convert all amounts to display currency before calculating totals
+  // Optimization: Single-pass through transactions instead of 4 passes
   const stats = useMemo(() => {
     if (!filteredTransactions.length) {
       return {
@@ -50,22 +61,8 @@ export function TransactionsPage() {
       };
     }
 
-    const totalCredits = filteredTransactions
-      .filter((t) => t.type === 'CREDIT')
-      .reduce((sum, t) => {
-        const convertedAmount = convertCurrency(
-          t.amount,
-          t.date,
-          t.currencyIsoCode,
-          displayCurrency,
-          exchangeRatesMap,
-        );
-        return sum + convertedAmount;
-      }, 0);
-
-    const totalDebits = filteredTransactions
-      .filter((t) => t.type === 'DEBIT')
-      .reduce((sum, t) => {
+    const { totalCredits, totalDebits } = filteredTransactions.reduce(
+      (acc, t) => {
         const convertedAmount = convertCurrency(
           Math.abs(t.amount),
           t.date,
@@ -73,8 +70,17 @@ export function TransactionsPage() {
           displayCurrency,
           exchangeRatesMap,
         );
-        return sum + convertedAmount;
-      }, 0);
+
+        if (t.type === 'CREDIT') {
+          acc.totalCredits += convertedAmount;
+        } else {
+          acc.totalDebits += convertedAmount;
+        }
+
+        return acc;
+      },
+      { totalCredits: 0, totalDebits: 0 },
+    );
 
     const netBalance = totalCredits - totalDebits;
 
@@ -87,6 +93,7 @@ export function TransactionsPage() {
   }, [filteredTransactions, displayCurrency, exchangeRatesMap]);
 
   // Calculate monthly averages based on date range of filtered transactions
+  // Optimization: Find min/max dates in O(n) instead of sorting O(n log n)
   const monthlyAverages = useMemo(() => {
     if (!filteredTransactions.length || filteredTransactions.length < 2) {
       return {
@@ -98,13 +105,16 @@ export function TransactionsPage() {
       };
     }
 
-    // Sort transactions by date to get first and last
-    const sortedByDate = [...filteredTransactions].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-    );
+    // Find earliest and latest dates in a single pass O(n)
+    let firstDate = parseISO(filteredTransactions[0].date);
+    let lastDate = firstDate;
 
-    const firstDate = parseISO(sortedByDate[0].date);
-    const lastDate = parseISO(sortedByDate[sortedByDate.length - 1].date);
+    for (let i = 1; i < filteredTransactions.length; i++) {
+      const currentDate = parseISO(filteredTransactions[i].date);
+      if (currentDate < firstDate) firstDate = currentDate;
+      if (currentDate > lastDate) lastDate = currentDate;
+    }
+
     const totalDays = differenceInDays(lastDate, firstDate);
 
     // If all transactions are on the same day, return zeros
@@ -149,24 +159,43 @@ export function TransactionsPage() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
           <p className="text-muted-foreground">View and manage transactions</p>
         </div>
         <ImportButton
-          onSuccess={(count) => {
-            setImportMessage({
-              type: 'success',
-              text: `Successfully imported ${count} transaction(s)`,
-            });
-            setTimeout(() => setImportMessage(null), 5000);
+          onSuccess={(count, importedTransactions) => {
+            // Check if any transactions are older than our earliest exchange rate
+            // Optimization: Find earliest transaction in O(n) instead of sorting O(n log n)
+            let hasOldTransactions = false;
+
+            if (earliestExchangeRateDate && importedTransactions.length > 0) {
+              // Find the earliest transaction using reduce (O(n))
+              const earliestTransaction = importedTransactions.reduce((earliest, current) =>
+                current.date < earliest.date ? current : earliest,
+              );
+
+              // Only need to check the earliest transaction
+              hasOldTransactions = earliestTransaction.date < earliestExchangeRateDate;
+            }
+
+            if (hasOldTransactions && earliestRateText) {
+              // Show persistent warning for old transactions (no auto-dismiss)
+              // Use pre-computed memoized rate text
+              setImportMessage({
+                type: 'warning',
+                text: `Successfully imported ${count} transaction(s). Some transactions are older than our earliest exchange rate. Currency conversions will use ${earliestRateText}.`,
+              });
+            } else {
+              // Normal success message with auto-dismiss
+              setImportMessage({
+                type: 'success',
+                text: `Successfully imported ${count} transaction(s)`,
+              });
+              setTimeout(() => setImportMessage(null), 5000);
+            }
           }}
           onError={(error) => {
             setImportMessage({
@@ -180,36 +209,35 @@ export function TransactionsPage() {
       <AnimatePresence>
         {importMessage && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <div
-              className={`flex items-center justify-between rounded-lg px-4 py-3 ${
-                importMessage.type === 'success'
-                  ? 'bg-success/15 text-success'
+            key="import-message"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className={`flex items-center justify-between rounded-lg px-4 py-3 ${
+              importMessage.type === 'success'
+                ? 'bg-success/15 text-success'
+                : importMessage.type === 'warning'
+                  ? 'bg-warning/15 text-warning'
                   : 'bg-destructive/15 text-destructive'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {importMessage.type === 'success' ? (
-                  <CheckCircle className="h-5 w-5" />
-                ) : (
-                  <AlertCircle className="h-5 w-5" />
-                )}
-                <span className="font-medium">{importMessage.text}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setImportMessage(null)}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {importMessage.type === 'success' ? (
+                <CheckCircle className="h-5 w-5" />
+              ) : (
+                <AlertCircle className="h-5 w-5" />
+              )}
+              <span className="font-medium">{importMessage.text}</span>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setImportMessage(null)}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -295,9 +323,9 @@ export function TransactionsPage() {
       </>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
       >
         <Card>
           <CardContent className="pt-6">
@@ -312,6 +340,6 @@ export function TransactionsPage() {
           </CardContent>
         </Card>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
