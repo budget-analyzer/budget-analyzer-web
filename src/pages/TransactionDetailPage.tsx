@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAppSelector } from '@/store/hooks';
-import { convertCurrency } from '@/lib/currency';
+import { convertCurrency, findNearestExchangeRate } from '@/lib/currency';
 import { useMemo } from 'react';
 
 export function TransactionDetailPage() {
@@ -56,14 +56,19 @@ export function TransactionDetailPage() {
       exchangeRatesMap,
     );
 
-    // Get the full exchange rate response from the map
-    const exchangeRateResponse = exchangeRatesMap.get(transaction.date);
+    // Get the full exchange rate response from the map (or nearest available)
+    const exchangeRateResponse = findNearestExchangeRate(transaction.date, exchangeRatesMap);
+
+    // State 3: Missing rate - we had to use a rate from a completely different date
+    const usedFallbackRate = exchangeRateResponse?.date !== transaction.date;
 
     return {
       needsConversion: true as const,
       convertedAmount,
       rate: exchangeRateResponse?.rate,
       publishedDate: exchangeRateResponse?.publishedDate,
+      rateDate: exchangeRateResponse?.date,
+      usedFallbackRate,
       sourceCurrency,
       targetCurrency: displayCurrency,
     };
@@ -269,15 +274,26 @@ export function TransactionDetailPage() {
                         ? conversionInfo.targetCurrency
                         : 'USD'}
                     </p>
-                    {conversionInfo.publishedDate && (
+                    {conversionInfo.publishedDate && conversionInfo.rateDate && (
                       <p
                         className={`text-xs mt-1 ${
-                          conversionInfo.publishedDate !== transaction.date
-                            ? 'text-warning'
-                            : 'text-success'
+                          conversionInfo.usedFallbackRate ? 'text-warning' : 'text-success'
                         }`}
                       >
-                        FRED daily spot rate published on {formatDate(conversionInfo.publishedDate)}
+                        {conversionInfo.usedFallbackRate ? (
+                          <>
+                            Rate from {formatDate(conversionInfo.rateDate)} (most recent available)
+                            <span className="block mt-0.5 text-muted-foreground">
+                              FRED daily spot rate published on{' '}
+                              {formatDate(conversionInfo.publishedDate)}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            FRED daily spot rate published on{' '}
+                            {formatDate(conversionInfo.publishedDate)}
+                          </>
+                        )}
                       </p>
                     )}
                   </div>

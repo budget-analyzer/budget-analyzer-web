@@ -17,8 +17,57 @@ export function buildExchangeRateMap(
 }
 
 /**
+ * Find the nearest available exchange rate for a given date
+ * Falls back to closest available rate if exact date not found.
+ *
+ * In practice the API will always return a rate for every date
+ * it has in a range.  So transactions prior to the range of dates
+ * for which we have an exchange rate will always use the earliest
+ * rate we have, which is 1981-01-02,20.6611 for THB.  And for
+ * transactions that occur after the range of rates for which we
+ * have data, we will always use the most recent rate we have.
+ *
+ * @param date Transaction date (YYYY-MM-DD)
+ * @param ratesMap Map of dates to exchange rate responses
+ * @returns Exchange rate response for nearest available date, or null if no rates available
+ */
+export function findNearestExchangeRate(
+  date: string,
+  ratesMap: Map<string, ExchangeRateResponse>,
+): ExchangeRateResponse | null {
+  // First try exact match
+  const exactMatch = ratesMap.get(date);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  // No exact match - find nearest date
+  const allDates = Array.from(ratesMap.keys()).sort();
+  if (allDates.length === 0) {
+    return null;
+  }
+
+  const targetDate = new Date(date);
+  const targetTime = targetDate.getTime();
+
+  // Find the closest date by comparing absolute time differences
+  let closestDate = allDates[0];
+  let minDifference = Math.abs(new Date(closestDate).getTime() - targetTime);
+
+  for (const availableDate of allDates) {
+    const difference = Math.abs(new Date(availableDate).getTime() - targetTime);
+    if (difference < minDifference) {
+      minDifference = difference;
+      closestDate = availableDate;
+    }
+  }
+
+  return ratesMap.get(closestDate) || null;
+}
+
+/**
  * Convert an amount from one currency to another using exchange rate
- * API guarantees a rate exists for every date, so no fallback logic needed
+ * If no exact rate exists for the date, uses the nearest available rate
  *
  * @param amount Amount in source currency
  * @param date Transaction date (YYYY-MM-DD)
@@ -39,14 +88,22 @@ export function convertCurrency(
     return amount;
   }
 
-  // Get the exchange rate response for this date
-  const exchangeRateResponse = ratesMap.get(date);
+  // Get the exchange rate response for this date (or nearest available)
+  const exchangeRateResponse = findNearestExchangeRate(date, ratesMap);
 
-  // If no rate found, return original amount
-  // This shouldn't happen if API guarantees coverage, but defensive programming
+  // If no rate found at all, return original amount
   if (!exchangeRateResponse) {
-    console.warn(`No exchange rate found for ${date}, ${sourceCurrency} -> ${targetCurrency}`);
+    console.warn(
+      `No exchange rates available in map for ${date}, ${sourceCurrency} -> ${targetCurrency}`,
+    );
     return amount;
+  }
+
+  // Log if we're using a fallback rate
+  if (exchangeRateResponse.date !== date) {
+    console.info(
+      `Using nearest exchange rate from ${exchangeRateResponse.date} for transaction dated ${date}`,
+    );
   }
 
   const rate = exchangeRateResponse.rate;

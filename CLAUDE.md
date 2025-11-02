@@ -148,6 +148,13 @@ const handleDelete = async () => {
 - `ErrorBanner.tsx` - Displays API errors with retry functionality
 - All API errors are normalized through the `ApiError` class
 
+### UI/UX Principles
+
+**No Tooltips**:
+- **NEVER** use tooltips or hover states to display information
+- Tooltips don't work on mobile/touch devices
+- All information must be visible inline by default
+
 ### Testing Setup
 
 **Vitest configuration** (`vitest.config.ts`):
