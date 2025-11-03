@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/Select';
 import { useImportTransactions } from '@/hooks/useImportTransactions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collapseFromRightVariants, collapseTransition } from '@/lib/animations';
+import { collapseFromRightFadeExitVariants, collapseTransition } from '@/lib/animations';
 import { Transaction } from '@/types/transaction';
 
 interface ImportButtonProps {
@@ -97,7 +97,7 @@ export function ImportButton({ onSuccess, onError }: ImportButtonProps) {
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            variants={collapseFromRightVariants}
+            variants={collapseFromRightFadeExitVariants}
             initial="initial"
             animate="animate"
             exit="exit"
@@ -165,7 +165,7 @@ export function ImportButton({ onSuccess, onError }: ImportButtonProps) {
           variant="default"
         >
           <Upload className="mr-2 h-4 w-4" />
-          {isPending ? 'Importing...' : 'Import'}
+          Import Transactions
         </Button>
       )}
     </div>

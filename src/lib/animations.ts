@@ -70,7 +70,7 @@ export const expandTransition: Transition = {
 };
 
 /**
- * Horizontal collapse with fade from right to left
+ * Horizontal open from right to left with fade on exit
  * Uses scaleX for smooth horizontal collapse while fading
  * Anchored on the right: opens from right to left, closes from left to right
  * Use for toolbars/panels that appear on the right side
@@ -82,7 +82,7 @@ export const collapseFromRightVariants: Variants = {
 };
 
 /**
- * Horizontal collapse with fade from left to right
+ * Horizontal open from left to right with fade on exit
  * Uses scaleX for smooth horizontal collapse while fading
  * Anchored on the left: opens from left to right, closes from right to left
  * Use for toolbars/panels that appear on the left side
@@ -99,4 +99,16 @@ export const collapseFromLeftVariants: Variants = {
 export const collapseTransition: Transition = {
   duration: ANIMATION_DURATION.normal,
   ease: ANIMATION_EASING,
+};
+
+/**
+ * Horizontal collapse with fade from right to left on entry, fade-only on exit
+ * Opens with scale animation from right to left
+ * Closes with simple opacity fade (no horizontal movement)
+ * Use for toolbars/panels where exit should be subtle
+ */
+export const collapseFromRightFadeExitVariants: Variants = {
+  initial: { opacity: 0, scaleX: 0, transformOrigin: 'right' },
+  animate: { opacity: 1, scaleX: 1, transformOrigin: 'right' },
+  exit: { opacity: 0 },
 };
