@@ -4,22 +4,22 @@ import { Transaction, TransactionFilter } from '@/types/transaction';
 
 export const transactionApi = {
   getTransactions: async (): Promise<Transaction[]> => {
-    const response = await apiClient.get<Transaction[]>('/transactions');
+    const response = await apiClient.get<Transaction[]>('/v1/transactions');
     return response.data;
   },
 
   getTransaction: async (id: number): Promise<Transaction> => {
-    const response = await apiClient.get<Transaction>(`/transactions/${id}`);
+    const response = await apiClient.get<Transaction>(`/v1/transactions/${id}`);
     return response.data;
   },
 
   searchTransactions: async (filter: TransactionFilter): Promise<Transaction[]> => {
-    const response = await apiClient.post<Transaction[]>('/transactions/search', filter);
+    const response = await apiClient.post<Transaction[]>('/v1/transactions/search', filter);
     return response.data;
   },
 
   deleteTransaction: async (id: number): Promise<void> => {
-    await apiClient.delete(`/transactions/${id}`);
+    await apiClient.delete(`/v1/transactions/${id}`);
   },
 
   importTransactions: async (
@@ -38,7 +38,7 @@ export const transactionApi = {
     }
 
     const response = await apiClient.post<Transaction[]>(
-      `/transactions/import?${params.toString()}`,
+      `/v1/transactions/import?${params.toString()}`,
       formData,
       {
         headers: {

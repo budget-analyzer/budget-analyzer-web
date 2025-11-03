@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  http.get('/api/transactions', () => {
+  http.get('/api/v1/transactions', () => {
     return HttpResponse.json([
       {
         id: '1',
@@ -15,7 +15,7 @@ export const handlers = [
       },
     ]);
   }),
-  http.delete('/api/transactions/:id', () => {
+  http.delete('/api/v1/transactions/:id', () => {
     return new HttpResponse(null, { status: 204 });
   }),
 ];
