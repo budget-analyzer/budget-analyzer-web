@@ -514,10 +514,34 @@ export function TransactionTable({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount:</span>
                   <span className="font-medium">
-                    {formatCurrency(
-                      transactionToDelete.amount,
-                      transactionToDelete.currencyIsoCode,
-                    )}
+                    {(() => {
+                      const convertedAmount = convertCurrency(
+                        transactionToDelete.amount,
+                        transactionToDelete.date,
+                        transactionToDelete.currencyIsoCode,
+                        displayCurrency,
+                        exchangeRatesMap,
+                      );
+                      const needsOriginalCurrency =
+                        transactionToDelete.currencyIsoCode !== displayCurrency;
+
+                      return (
+                        <>
+                          {formatCurrency(convertedAmount, displayCurrency)}
+                          {needsOriginalCurrency && (
+                            <span className="text-muted-foreground">
+                              {' '}
+                              (
+                              {formatCurrency(
+                                transactionToDelete.amount,
+                                transactionToDelete.currencyIsoCode,
+                              )}
+                              )
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
                   </span>
                 </div>
               </div>
