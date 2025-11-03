@@ -1,9 +1,9 @@
 // src/pages/TransactionsPage.tsx
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useExchangeRatesMap } from '@/hooks/useCurrencies';
 import { useTransactionStats } from '@/hooks/useTransactionStats';
-import { fadeInVariants, fadeTransition } from '@/lib/animations';
+import { fadeInVariants, layoutTransition } from '@/lib/animations';
 import { TransactionTable } from '@/components/TransactionTable';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -201,40 +201,47 @@ export function TransactionsPage() {
         }
       />
 
-      <AnimatePresence>
-        {importMessage && (
-          <ImportMessageBanner
-            type={importMessage.type}
-            message={importMessage.text}
-            onClose={() => setImportMessage(null)}
-          />
-        )}
-      </AnimatePresence>
+      <LayoutGroup>
+        <AnimatePresence>
+          {importMessage && (
+            <ImportMessageBanner
+              type={importMessage.type}
+              message={importMessage.text}
+              onClose={() => setImportMessage(null)}
+            />
+          )}
+        </AnimatePresence>
 
-      <TransactionStatsGrid stats={mainStats} isLoading={isExchangeRatesLoading} />
+        <motion.div layout transition={layoutTransition}>
+          <TransactionStatsGrid stats={mainStats} isLoading={isExchangeRatesLoading} />
+        </motion.div>
 
-      <TransactionStatsGrid stats={monthlyStats} isLoading={isExchangeRatesLoading} />
+        <motion.div layout transition={layoutTransition}>
+          <TransactionStatsGrid stats={monthlyStats} isLoading={isExchangeRatesLoading} />
+        </motion.div>
 
-      <motion.div
-        variants={fadeInVariants}
-        initial="initial"
-        animate="animate"
-        transition={fadeTransition}
-      >
-        <Card>
-          <CardContent className="pt-6">
-            {transactions && (
-              <TransactionTable
-                transactions={transactions}
-                onFilteredRowsChange={setFilteredTransactions}
-                displayCurrency={displayCurrency}
-                exchangeRatesMap={exchangeRatesMap}
-                isExchangeRatesLoading={isExchangeRatesLoading}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+        <motion.div
+          layout
+          variants={fadeInVariants}
+          initial="initial"
+          animate="animate"
+          transition={layoutTransition}
+        >
+          <Card>
+            <CardContent className="pt-6">
+              {transactions && (
+                <TransactionTable
+                  transactions={transactions}
+                  onFilteredRowsChange={setFilteredTransactions}
+                  displayCurrency={displayCurrency}
+                  exchangeRatesMap={exchangeRatesMap}
+                  isExchangeRatesLoading={isExchangeRatesLoading}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </LayoutGroup>
     </div>
   );
 }
