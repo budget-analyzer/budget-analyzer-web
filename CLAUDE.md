@@ -148,6 +148,34 @@ const handleDelete = async () => {
 - `ErrorBanner.tsx` - Displays API errors with retry functionality
 - All API errors are normalized through the `ApiError` class
 
+**Animation Configuration**:
+- **CRITICAL**: All Framer Motion animation props (variants, transitions, durations, easing) MUST be defined in [src/lib/animations.ts](src/lib/animations.ts)
+- **NEVER** inline animation values in components (e.g., `duration: 0.3`, `ease: "easeInOut"`, or inline variant objects)
+- Components should only import and use the exported constants from `animations.ts`
+- This ensures consistency across the app and makes animation timing/easing changes easy to manage centrally
+
+**Correct pattern:**
+```typescript
+// ✅ CORRECT - Import animation config
+import { fadeVariants, fadeTransition } from '@/lib/animations';
+
+<motion.div variants={fadeVariants} transition={fadeTransition}>
+  {content}
+</motion.div>
+```
+
+**Anti-pattern:**
+```typescript
+// ❌ WRONG - Inline animation values
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.3, ease: 'easeInOut' }}
+>
+  {content}
+</motion.div>
+```
+
 ### UI/UX Principles
 
 **No Tooltips**:
