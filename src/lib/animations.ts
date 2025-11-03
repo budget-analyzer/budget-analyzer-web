@@ -100,15 +100,3 @@ export const collapseTransition: Transition = {
   duration: ANIMATION_DURATION.normal,
   ease: ANIMATION_EASING,
 };
-
-/**
- * Horizontal collapse with fade from right to left on entry, fade-only on exit
- * Opens with scale animation from right to left
- * Closes with simple opacity fade (no horizontal movement)
- * Use for toolbars/panels where exit should be subtle
- */
-export const collapseFromRightFadeExitVariants: Variants = {
-  initial: { opacity: 0, scaleX: 0, transformOrigin: 'right' },
-  animate: { opacity: 1, scaleX: 1, transformOrigin: 'right' },
-  exit: { opacity: 0 },
-};
