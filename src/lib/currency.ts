@@ -53,7 +53,12 @@ function getInvertedRatesMap(
 // Cache for earliest/latest dates per ratesMap to avoid repeated calculations
 const dateRangeCache = new WeakMap<
   Map<string, ExchangeRateResponse>,
-  { earliest: string; latest: string; earliestRate: ExchangeRateResponse; latestRate: ExchangeRateResponse }
+  {
+    earliest: string;
+    latest: string;
+    earliestRate: ExchangeRateResponse;
+    latestRate: ExchangeRateResponse;
+  }
 >();
 
 /**
@@ -88,7 +93,11 @@ export function findNearestExchangeRate(
   // Get or compute the date range boundaries (cached per ratesMap instance)
   let dateRange = dateRangeCache.get(ratesMap);
   if (!dateRange) {
-    console.log('[findNearestExchangeRate] Computing date range for map with', ratesMap.size, 'entries');
+    console.log(
+      '[findNearestExchangeRate] Computing date range for map with',
+      ratesMap.size,
+      'entries',
+    );
     const allDates = Array.from(ratesMap.keys()).sort();
     const earliest = allDates[0];
     const latest = allDates[allDates.length - 1];
