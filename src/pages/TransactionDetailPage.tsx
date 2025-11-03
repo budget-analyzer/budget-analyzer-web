@@ -6,7 +6,7 @@ import { useExchangeRatesMap } from '@/hooks/useCurrencies';
 import { fadeInVariants, fadeTransition, layoutTransition } from '@/lib/animations';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { DetailRow } from '@/components/DetailRow';
+import { IconLabel } from '@/components/IconLabel';
 import { CurrencyConversionCard } from '@/components/CurrencyConversionCard';
 import { TransactionMetadataCard } from '@/components/TransactionMetadataCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -156,9 +156,9 @@ export function TransactionDetailPage() {
                 </Badge>
               </div>
 
-              <DetailRow icon={FileText} label="Description" value={transaction.description} />
+              <IconLabel icon={FileText} label="Description" value={transaction.description} />
 
-              <DetailRow
+              <IconLabel
                 icon={Calendar}
                 label="Transaction Date"
                 value={formatDate(transaction.date)}
@@ -179,16 +179,16 @@ export function TransactionDetailPage() {
               <CardDescription>Bank and account details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <DetailRow icon={Building2} label="Bank Name" value={transaction.bankName} />
+              <IconLabel icon={Building2} label="Bank Name" value={transaction.bankName} />
 
-              <DetailRow
+              <IconLabel
                 icon={CreditCard}
                 label="Account ID"
                 value={transaction.accountId}
                 valueClassName="text-base font-mono"
               />
 
-              <DetailRow icon={Currency} label="Currency" value={transaction.currencyIsoCode} />
+              <IconLabel icon={Currency} label="Currency" value={transaction.currencyIsoCode} />
             </CardContent>
           </Card>
         </motion.div>

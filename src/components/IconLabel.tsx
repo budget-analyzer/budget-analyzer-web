@@ -1,15 +1,15 @@
-// src/components/DetailRow.tsx
+// src/components/IconLabel.tsx
 import { LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
 
-interface DetailRowProps {
+interface IconLabelProps {
   icon: LucideIcon;
   label: string;
   value: ReactNode;
   valueClassName?: string;
 }
 
-export function DetailRow({ icon: Icon, label, value, valueClassName }: DetailRowProps) {
+export function IconLabel({ icon: Icon, label, value, valueClassName }: IconLabelProps) {
   return (
     <div className="flex items-start gap-3">
       <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />

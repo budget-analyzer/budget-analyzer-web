@@ -1,7 +1,7 @@
 // src/components/CurrencyConversionCard.tsx
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { DetailRow } from '@/components/DetailRow';
+import { IconLabel } from '@/components/IconLabel';
 import { expandVariants, expandTransition } from '@/lib/animations';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ArrowRightLeft, Banknote, Info } from 'lucide-react';
@@ -60,7 +60,7 @@ export function CurrencyConversionCard({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <DetailRow
+              <IconLabel
                 icon={Banknote}
                 label="Original Transaction"
                 value={formatCurrency(originalAmount, conversionInfo.sourceCurrency)}
