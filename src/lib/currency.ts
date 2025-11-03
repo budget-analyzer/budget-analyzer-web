@@ -1,12 +1,6 @@
 // src/lib/currency.ts
 import { ExchangeRateResponse } from '@/types/currency';
 
-// Cache inverted rates per ratesMap instance to avoid recalculating 1/rate on every conversion
-const invertedRatesCache = new WeakMap<
-  Map<string, ExchangeRateResponse>,
-  Map<string, ExchangeRateResponse>
->();
-
 /**
  * Build a Map of date -> exchange rate response for fast O(1) lookups
  * @param rates Array of exchange rate responses from API
@@ -20,34 +14,6 @@ export function buildExchangeRateMap(
     map.set(rate.date, rate);
   });
   return map;
-}
-
-/**
- * Get or build inverted rates map (cached per ratesMap instance)
- * Inverted rates are used for THB→USD conversion to avoid recalculating 1/rate
- * @param ratesMap Original rates map (USD→THB)
- * @returns Inverted rates map (THB→USD) with rate = 1/originalRate
- */
-function getInvertedRatesMap(
-  ratesMap: Map<string, ExchangeRateResponse>,
-): Map<string, ExchangeRateResponse> {
-  let invertedMap = invertedRatesCache.get(ratesMap);
-  if (!invertedMap) {
-    console.log(
-      '[getInvertedRatesMap] Building inverted rates cache for map with',
-      ratesMap.size,
-      'entries',
-    );
-    invertedMap = new Map<string, ExchangeRateResponse>();
-    ratesMap.forEach((rateResponse, date) => {
-      invertedMap!.set(date, {
-        ...rateResponse,
-        rate: 1 / rateResponse.rate,
-      });
-    });
-    invertedRatesCache.set(ratesMap, invertedMap);
-  }
-  return invertedMap;
 }
 
 // Cache for earliest/latest dates per ratesMap to avoid repeated calculations
@@ -152,14 +118,8 @@ export function convertCurrency(
     return amount;
   }
 
-  // Determine which rate map to use based on conversion direction
-  // For USD->THB: use original rates (multiply)
-  // For THB->USD: use inverted rates (multiply by 1/rate, pre-cached)
-  const useInvertedRates = sourceCurrency !== 'USD' && targetCurrency === 'USD';
-  const effectiveRatesMap = useInvertedRates ? getInvertedRatesMap(ratesMap) : ratesMap;
-
   // Get the exchange rate response for this date (or nearest available)
-  const exchangeRateResponse = findNearestExchangeRate(date, effectiveRatesMap);
+  const exchangeRateResponse = findNearestExchangeRate(date, ratesMap);
 
   // If no rate found at all, return original amount
   if (!exchangeRateResponse) {
@@ -168,6 +128,13 @@ export function convertCurrency(
 
   const rate = exchangeRateResponse.rate;
 
-  // Apply conversion - now always just multiply since we use the right map
-  return amount * rate;
+  // Apply conversion based on direction
+  // Note: Exchange rates are stored as baseCurrency (USD) -> targetCurrency (THB)
+  if (sourceCurrency === 'USD') {
+    // USD -> THB: multiply by rate
+    return amount * rate;
+  } else {
+    // THB -> USD: divide by rate
+    return amount / rate;
+  }
 }
