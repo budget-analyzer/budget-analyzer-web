@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Interaction Guidelines
 
 **IMPORTANT: Always Ask Before Implementing**
+
 - When the user asks a question or makes an observation (e.g., "looks good, we need to fix X", "is that appropriate?", "do you have suggestions?"), DO NOT immediately start making code changes
 - First, answer the question, provide suggestions, or discuss the approach
 - Wait for explicit confirmation from the user before writing/editing files
@@ -12,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Budget Analyzer Client is a React 19 application for managing and analyzing financial transactions. Built with TypeScript, Vite, and modern React patterns including React Query for server state and Redux Toolkit for UI state.
+Budget Analyzer Web is a React 19 application for managing and analyzing financial transactions. Built with TypeScript, Vite, and modern React patterns including React Query for server state and Redux Toolkit for UI state.
 
 ### API Contract
 
@@ -23,26 +24,31 @@ Budget Analyzer Client is a React 19 application for managing and analyzing fina
 ## Development Commands
 
 ### Building and Running
+
 - `npm run dev` - Start development server on port 3000 (auto-opens browser)
 - `npm run build` - Type-check with `tsc` then build for production
 - `npm run preview` - Preview production build locally
 
 ### Code Quality
+
 - `npm run lint:fix` - Auto-fix ESLint issues (ALWAYS use this instead of `npm run lint`)
 - `npm run format` - Format code with Prettier
 
 **IMPORTANT**: Always use `npm run lint:fix` to automatically fix formatting issues. Never run `npm run lint` first - it wastes time showing errors that can be auto-fixed.
 
 ### Testing
+
 - `npm test` - Run tests in watch mode with Vitest
 - `npm run test:ui` - Run tests with Vitest UI interface
 
 **Running a single test file:**
+
 ```bash
 npx vitest src/test/Button.test.tsx
 ```
 
 **Running tests matching a pattern:**
+
 ```bash
 npx vitest --grep "renders correctly"
 ```
@@ -72,13 +78,15 @@ This app uses a **dual state management** approach:
 3. **Real API Mode** - Connects to actual backend
 
 Toggle via environment variable `VITE_USE_MOCK_DATA`:
+
 - `true` - Uses mock data with simulated delays
 - `false` or unset - Makes real API calls via axios client
 
 **API Client (`src/api/client.ts`):**
+
 - Axios instance with 10s timeout
 - Request interceptor for future auth token injection
-- Response interceptor that transforms all errors into `ApiError` class with RFC 7807-style error responses
+- Response interceptor that transforms all errors into `ApiError` class with standardized error responses
 - Base URL configured via `VITE_API_BASE_URL` env var
 
 **Development Proxy:**
@@ -87,12 +95,14 @@ Vite dev server proxies `/api` → `http://localhost:8080/budget-analyzer-api` (
 ### Path Aliases
 
 Use `@/*` for imports instead of relative paths:
+
 ```typescript
 import { Transaction } from '@/types/transaction';
 import { apiClient } from '@/api/client';
 ```
 
 Configured in:
+
 - `tsconfig.json` - TypeScript resolution
 - `vite.config.ts` - Vite bundling
 - `vitest.config.ts` - Test resolution
@@ -102,12 +112,14 @@ Configured in:
 **CRITICAL - Separation of Concerns**: Components are ONLY for presentation and UI logic. Never put async/await, API calls, or business logic directly in components.
 
 **Correct patterns:**
+
 - ✅ Use React Query hooks (`useQuery`, `useMutation`) in custom hooks (e.g., `src/hooks/useTransactions.ts`)
 - ✅ Call mutations using the `mutate` function with callbacks: `mutate(data, { onSuccess, onError })`
 - ✅ Keep components synchronous and declarative
 - ✅ Use `isPending`, `isLoading`, `isError` states from hooks for UI feedback
 
 **Anti-patterns to AVOID:**
+
 - ❌ `async` functions in components
 - ❌ `await` in component code
 - ❌ Direct API calls in components (e.g., `await apiClient.post()`)
@@ -115,6 +127,7 @@ Configured in:
 - ❌ Complex business logic in components
 
 **Example of correct pattern:**
+
 ```typescript
 // ✅ CORRECT - Component uses mutation with callbacks
 const { mutate: deleteItem, isPending } = useDeleteItem();
@@ -128,6 +141,7 @@ const handleDelete = () => {
 ```
 
 **Example of anti-pattern:**
+
 ```typescript
 // ❌ WRONG - async/await in component
 const handleDelete = async () => {
@@ -145,17 +159,20 @@ const handleDelete = async () => {
 **Table Implementation**: Uses TanStack Table (v8) in headless mode. See `src/components/TransactionTable.tsx` for column definitions, sorting, filtering, and pagination.
 
 **Error Handling**:
+
 - `ErrorBoundary.tsx` - React error boundary for component crashes
 - `ErrorBanner.tsx` - Displays API errors with retry functionality
 - All API errors are normalized through the `ApiError` class
 
 **Animation Configuration**:
+
 - **CRITICAL**: All Framer Motion animation props (variants, transitions, durations, easing) MUST be defined in [src/lib/animations.ts](src/lib/animations.ts)
 - **NEVER** inline animation values in components (e.g., `duration: 0.3`, `ease: "easeInOut"`, or inline variant objects)
 - Components should only import and use the exported constants from `animations.ts`
 - This ensures consistency across the app and makes animation timing/easing changes easy to manage centrally
 
 **Correct pattern:**
+
 ```typescript
 // ✅ CORRECT - Import animation config
 import { fadeVariants, fadeTransition } from '@/lib/animations';
@@ -166,6 +183,7 @@ import { fadeVariants, fadeTransition } from '@/lib/animations';
 ```
 
 **Anti-pattern:**
+
 ```typescript
 // ❌ WRONG - Inline animation values
 <motion.div
@@ -180,6 +198,7 @@ import { fadeVariants, fadeTransition } from '@/lib/animations';
 ### UI/UX Principles
 
 **No Tooltips**:
+
 - **NEVER** use tooltips or hover states to display information
 - Tooltips don't work on mobile/touch devices
 - All information must be visible inline by default
@@ -187,12 +206,14 @@ import { fadeVariants, fadeTransition } from '@/lib/animations';
 ### Testing Setup
 
 **Vitest configuration** (`vitest.config.ts`):
+
 - jsdom environment for React component testing
 - Setup file: `src/test/setup.ts` (configures MSW server and jest-dom matchers)
 - Path aliases resolved
 - CSS processing enabled
 
 **MSW (Mock Service Worker):**
+
 - Handlers: `src/mocks/handlers.ts`
 - Server setup: `src/mocks/server.ts`
 - Started in `beforeAll`, reset in `afterEach`, closed in `afterAll`
@@ -257,7 +278,7 @@ If a solution requires more than 2 lines of explanation for "why this works", it
 
 **Theme Persistence**: Theme state lives in Redux but is synced to localStorage and DOM class (`dark`) via the `uiSlice` reducers. On initial load, theme is read from localStorage (see `src/store/uiSlice.ts:11`).
 
-**Transaction Type System**: All transaction types are defined in `src/types/transaction.ts`. The API expects RFC 7807-style error responses (type defined in `src/types/apiError.ts`).
+**Transaction Type System**: All transaction types are defined in `src/types/transaction.ts`. The API returns standardized error responses with type, message, code, and fieldErrors fields (type defined in `src/types/apiError.ts`).
 
 **Date Handling**: Uses `date-fns` library for all date formatting and manipulation. Import from `date-fns` not `date-fns/*` for tree-shaking.
 
