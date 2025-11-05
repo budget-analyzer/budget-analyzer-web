@@ -21,7 +21,8 @@ export interface MonthlySpending {
 
 export interface AnalyticsData {
   monthlySpending: MonthlySpending[];
-  currentYear: number;
+  earliestYear: number;
+  latestYear: number;
 }
 
 /**
@@ -32,17 +33,38 @@ export function useAnalyticsData(
   transactions: Transaction[] | undefined,
   displayCurrency: string,
   exchangeRatesMap: Map<string, ExchangeRateResponse>,
+  selectedYear: number,
 ): AnalyticsData {
-  const currentYear = useMemo(() => getCurrentYear(), []);
+  // Calculate earliest and latest years from transactions
+  const { earliestYear, latestYear } = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      const current = getCurrentYear();
+      return { earliestYear: current, latestYear: current };
+    }
 
-  // Calculate monthly spending for the current year
+    let earliest = Infinity;
+    let latest = -Infinity;
+
+    transactions.forEach((transaction) => {
+      const year = parseLocalDate(transaction.date).getFullYear();
+      if (year < earliest) earliest = year;
+      if (year > latest) latest = year;
+    });
+
+    return {
+      earliestYear: earliest === Infinity ? getCurrentYear() : earliest,
+      latestYear: latest === -Infinity ? getCurrentYear() : latest,
+    };
+  }, [transactions]);
+
+  // Calculate monthly spending for the selected year
   const monthlySpending = useMemo<MonthlySpending[]>(() => {
     if (!transactions || transactions.length === 0) {
-      // Return 12 months of empty data for current year
+      // Return 12 months of empty data for selected year
       return Array.from({ length: 12 }, (_, i) => ({
-        year: currentYear,
+        year: selectedYear,
         month: i + 1,
-        monthLabel: formatMonthYear(createMonthDate(currentYear, i + 1)),
+        monthLabel: formatMonthYear(createMonthDate(selectedYear, i + 1)),
         totalSpending: 0,
         transactionCount: 0,
       }));
@@ -51,9 +73,9 @@ export function useAnalyticsData(
     // Group transactions by month and calculate totals
     const monthlyData = new Map<string, { total: number; count: number }>();
 
-    // Initialize all 12 months for current year
+    // Initialize all 12 months for selected year
     for (let month = 0; month < 12; month++) {
-      const key = `${currentYear}-${String(month + 1).padStart(2, '0')}`;
+      const key = `${selectedYear}-${String(month + 1).padStart(2, '0')}`;
       monthlyData.set(key, { total: 0, count: 0 });
     }
 
@@ -62,8 +84,8 @@ export function useAnalyticsData(
       const transactionDate = parseLocalDate(transaction.date);
       const transactionYear = transactionDate.getFullYear();
 
-      // Only include transactions from current year
-      if (transactionYear !== currentYear) {
+      // Only include transactions from selected year
+      if (transactionYear !== selectedYear) {
         return;
       }
 
@@ -93,21 +115,22 @@ export function useAnalyticsData(
     // Convert map to array and format
     return Array.from({ length: 12 }, (_, i) => {
       const month = i + 1;
-      const monthKey = `${currentYear}-${String(month).padStart(2, '0')}`;
+      const monthKey = `${selectedYear}-${String(month).padStart(2, '0')}`;
       const data = monthlyData.get(monthKey) || { total: 0, count: 0 };
 
       return {
-        year: currentYear,
+        year: selectedYear,
         month,
-        monthLabel: formatMonthYear(createMonthDate(currentYear, month)),
+        monthLabel: formatMonthYear(createMonthDate(selectedYear, month)),
         totalSpending: data.total,
         transactionCount: data.count,
       };
     });
-  }, [transactions, currentYear, displayCurrency, exchangeRatesMap]);
+  }, [transactions, selectedYear, displayCurrency, exchangeRatesMap]);
 
   return {
     monthlySpending,
-    currentYear,
+    earliestYear,
+    latestYear,
   };
 }
