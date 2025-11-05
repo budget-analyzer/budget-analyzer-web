@@ -37,8 +37,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { convertCurrency } from '@/lib/currency';
+import { formatLocalDate, isDateInRange, compareDates } from '@/lib/dateUtils';
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -117,22 +118,12 @@ export function TransactionTable({
 
   // Apply date filtering to transactions
   const filteredByDate = useMemo(() => {
-    if (!dateFilter?.from && !dateFilter?.to) {
+    if (!dateFilter?.from || !dateFilter?.to) {
       return transactions;
     }
 
     return transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date);
-      const fromDate = dateFilter.from ? new Date(dateFilter.from) : null;
-      const toDate = dateFilter.to ? new Date(dateFilter.to) : null;
-
-      if (fromDate && transactionDate < fromDate) {
-        return false;
-      }
-      if (toDate && transactionDate > toDate) {
-        return false;
-      }
-      return true;
+      return isDateInRange(transaction.date, dateFilter.from!, dateFilter.to!);
     });
   }, [transactions, dateFilter]);
 
@@ -152,11 +143,9 @@ export function TransactionTable({
             </Button>
           );
         },
-        cell: ({ row }) => formatDate(row.getValue('date')),
+        cell: ({ row }) => formatLocalDate(row.getValue('date')),
         sortingFn: (rowA, rowB) => {
-          const dateA = new Date(rowA.getValue('date') as string);
-          const dateB = new Date(rowB.getValue('date') as string);
-          return dateA.getTime() - dateB.getTime();
+          return compareDates(rowA.getValue('date') as string, rowB.getValue('date') as string);
         },
       },
       {
@@ -531,7 +520,7 @@ export function TransactionTable({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date:</span>
-                  <span className="font-medium">{formatDate(transactionToDelete.date)}</span>
+                  <span className="font-medium">{formatLocalDate(transactionToDelete.date)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Description:</span>

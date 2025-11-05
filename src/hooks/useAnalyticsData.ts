@@ -1,9 +1,15 @@
 // src/hooks/useAnalyticsData.ts
 import { useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
-import { format, parseISO } from 'date-fns';
 import { convertCurrency } from '@/lib/currency';
 import { ExchangeRateResponse } from '@/types/currency';
+import {
+  getCurrentYear,
+  createMonthDate,
+  formatMonthYear,
+  parseLocalDate,
+  getMonthKey,
+} from '@/lib/dateUtils';
 
 export interface MonthlySpending {
   year: number;
@@ -27,7 +33,7 @@ export function useAnalyticsData(
   displayCurrency: string,
   exchangeRatesMap: Map<string, ExchangeRateResponse>,
 ): AnalyticsData {
-  const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const currentYear = useMemo(() => getCurrentYear(), []);
 
   // Calculate monthly spending for the current year
   const monthlySpending = useMemo<MonthlySpending[]>(() => {
@@ -36,7 +42,7 @@ export function useAnalyticsData(
       return Array.from({ length: 12 }, (_, i) => ({
         year: currentYear,
         month: i + 1,
-        monthLabel: format(new Date(currentYear, i, 1), 'MMM yyyy'),
+        monthLabel: formatMonthYear(createMonthDate(currentYear, i + 1)),
         totalSpending: 0,
         transactionCount: 0,
       }));
@@ -53,7 +59,7 @@ export function useAnalyticsData(
 
     // Process each transaction
     transactions.forEach((transaction) => {
-      const transactionDate = parseISO(transaction.date);
+      const transactionDate = parseLocalDate(transaction.date);
       const transactionYear = transactionDate.getFullYear();
 
       // Only include transactions from current year
@@ -66,7 +72,7 @@ export function useAnalyticsData(
         return;
       }
 
-      const monthKey = format(transactionDate, 'yyyy-MM');
+      const monthKey = getMonthKey(transaction.date);
 
       // Convert amount to display currency using the proper conversion utility
       const amountInDisplayCurrency = convertCurrency(
@@ -93,7 +99,7 @@ export function useAnalyticsData(
       return {
         year: currentYear,
         month,
-        monthLabel: format(new Date(currentYear, i, 1), 'MMM yyyy'),
+        monthLabel: formatMonthYear(createMonthDate(currentYear, month)),
         totalSpending: data.total,
         transactionCount: data.count,
       };

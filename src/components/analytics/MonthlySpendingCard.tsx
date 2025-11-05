@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { fadeInVariants, fadeTransition } from '@/lib/animations';
 import { TrendingDown } from 'lucide-react';
 import { Link } from 'react-router';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { getMonthBounds } from '@/lib/dateUtils';
 
 interface MonthlySpendingCardProps {
   year: number;
@@ -25,9 +25,7 @@ export function MonthlySpendingCard({
   currency,
 }: MonthlySpendingCardProps) {
   // Calculate first and last day of month (handles leap years correctly)
-  const monthDate = new Date(year, month - 1, 1);
-  const firstDay = format(startOfMonth(monthDate), 'yyyy-MM-dd');
-  const lastDay = format(endOfMonth(monthDate), 'yyyy-MM-dd');
+  const { from: firstDay, to: lastDay } = getMonthBounds(year, month);
 
   return (
     <motion.div
