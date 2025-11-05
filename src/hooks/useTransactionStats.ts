@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
 import { convertCurrency } from '@/lib/currency';
-import { differenceInDays, parseISO } from 'date-fns';
+import { getDaysBetween, getDateRange } from '@/lib/dateUtils';
 
 export interface TransactionStats {
   totalTransactions: number;
@@ -93,17 +93,20 @@ export function useTransactionStats({
       };
     }
 
-    // Find earliest and latest dates in a single pass O(n)
-    let firstDate = parseISO(transactions[0].date);
-    let lastDate = firstDate;
+    // Find earliest and latest dates using centralized utility
+    const dateRange = getDateRange(transactions.map((t) => t.date));
 
-    for (let i = 1; i < transactions.length; i++) {
-      const currentDate = parseISO(transactions[i].date);
-      if (currentDate < firstDate) firstDate = currentDate;
-      if (currentDate > lastDate) lastDate = currentDate;
+    if (!dateRange) {
+      return {
+        avgTransactionsPerMonth: 0,
+        avgCreditsPerMonth: 0,
+        avgDebitsPerMonth: 0,
+        avgNetBalancePerMonth: 0,
+        dateRange: '0 days',
+      };
     }
 
-    const totalDays = differenceInDays(lastDate, firstDate);
+    const totalDays = getDaysBetween(dateRange.earliest, dateRange.latest);
 
     // If all transactions are on the same day, return zeros
     if (totalDays === 0) {

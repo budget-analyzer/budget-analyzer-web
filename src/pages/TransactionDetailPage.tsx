@@ -12,7 +12,8 @@ import { TransactionMetadataCard } from '@/components/TransactionMetadataCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { formatLocalDate } from '@/lib/dateUtils';
 import {
   ArrowLeft,
   Calendar,
@@ -161,7 +162,7 @@ export function TransactionDetailPage() {
               <IconLabel
                 icon={Calendar}
                 label="Transaction Date"
-                value={formatDate(transaction.date)}
+                value={formatLocalDate(transaction.date)}
               />
             </CardContent>
           </Card>

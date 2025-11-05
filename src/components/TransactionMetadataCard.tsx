@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { IconLabel } from '@/components/IconLabel';
 import { Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatTimestamp } from '@/lib/dateUtils';
 
 interface TransactionMetadataCardProps {
   createdAt: string;
@@ -17,8 +17,8 @@ export function TransactionMetadataCard({ createdAt, updatedAt }: TransactionMet
         <CardDescription>System timestamps and tracking information</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-2">
-        <IconLabel icon={Clock} label="Created At" value={format(new Date(createdAt), 'PPpp')} />
-        <IconLabel icon={Clock} label="Last Updated" value={format(new Date(updatedAt), 'PPpp')} />
+        <IconLabel icon={Clock} label="Created At" value={formatTimestamp(createdAt)} />
+        <IconLabel icon={Clock} label="Last Updated" value={formatTimestamp(updatedAt)} />
       </CardContent>
     </Card>
   );

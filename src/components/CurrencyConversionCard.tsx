@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { IconLabel } from '@/components/IconLabel';
 import { expandVariants, expandTransition } from '@/lib/animations';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { formatLocalDate } from '@/lib/dateUtils';
 import { ArrowRightLeft, Banknote, Info } from 'lucide-react';
 import { TransactionType } from '@/types/transaction';
 
@@ -102,16 +103,16 @@ export function CurrencyConversionCard({
                       >
                         {conversionInfo.usedFallbackRate ? (
                           <>
-                            Rate from {formatDate(conversionInfo.rateDate)} (nearest available)
+                            Rate from {formatLocalDate(conversionInfo.rateDate)} (nearest available)
                             <span className="block mt-0.5 text-muted-foreground">
                               FRED daily spot rate published on{' '}
-                              {formatDate(conversionInfo.publishedDate)}
+                              {formatLocalDate(conversionInfo.publishedDate)}
                             </span>
                           </>
                         ) : (
                           <>
                             FRED daily spot rate published on{' '}
-                            {formatDate(conversionInfo.publishedDate)}
+                            {formatLocalDate(conversionInfo.publishedDate)}
                           </>
                         )}
                       </p>
