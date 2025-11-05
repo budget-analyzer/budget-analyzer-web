@@ -1,6 +1,7 @@
 // src/hooks/useTransactionStats.ts
 import { useMemo } from 'react';
 import { Transaction } from '@/types/transaction';
+import { ExchangeRateResponse } from '@/types/currency';
 import { convertCurrency } from '@/lib/currency';
 import { getDaysBetween, getDateRange } from '@/lib/dateUtils';
 
@@ -22,7 +23,7 @@ export interface MonthlyAverages {
 export interface UseTransactionStatsOptions {
   transactions: Transaction[];
   displayCurrency: string;
-  exchangeRatesMap: Map<string, { rate: number }>;
+  exchangeRatesMap: Map<string, ExchangeRateResponse>;
 }
 
 export function useTransactionStats({
