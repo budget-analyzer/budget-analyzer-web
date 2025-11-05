@@ -68,6 +68,8 @@ import {
 interface TransactionTableProps {
   transactions: Transaction[];
   onFilteredRowsChange?: (filteredTransactions: Transaction[]) => void;
+  onDateFilterChange?: (from: string | null, to: string | null) => void;
+  onSearchChange?: (query: string) => void;
   displayCurrency: string;
   exchangeRatesMap: Map<string, ExchangeRateResponse>;
   isExchangeRatesLoading: boolean;
@@ -76,6 +78,8 @@ interface TransactionTableProps {
 export function TransactionTable({
   transactions,
   onFilteredRowsChange,
+  onDateFilterChange,
+  onSearchChange,
   displayCurrency,
   exchangeRatesMap,
   isExchangeRatesLoading,
@@ -97,10 +101,14 @@ export function TransactionTable({
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       dispatch(setTransactionTableGlobalFilter(localSearchValue));
+      // Update URL for bookmarkability (if callback provided)
+      if (onSearchChange) {
+        onSearchChange(localSearchValue);
+      }
     }, 400);
 
     return () => clearTimeout(timeoutId);
-  }, [localSearchValue, dispatch]);
+  }, [localSearchValue, dispatch, onSearchChange]);
 
   // Sync local state when Redux state changes externally (e.g., clear filters button)
   useEffect(() => {
@@ -355,6 +363,13 @@ export function TransactionTable({
   const handleClearAllFilters = () => {
     dispatch(setTransactionTableGlobalFilter(''));
     dispatch(setTransactionTableDateFilter({ from: null, to: null }));
+    // Clear URL params when clearing filters
+    if (onDateFilterChange) {
+      onDateFilterChange(null, null);
+    }
+    if (onSearchChange) {
+      onSearchChange('');
+    }
   };
 
   return (
@@ -381,7 +396,14 @@ export function TransactionTable({
         <DateRangeFilter
           from={dateFilter?.from || null}
           to={dateFilter?.to || null}
-          onChange={(from, to) => dispatch(setTransactionTableDateFilter({ from, to }))}
+          onChange={(from, to) => {
+            // Update Redux for internal state
+            dispatch(setTransactionTableDateFilter({ from, to }));
+            // Update URL for bookmarkability (if callback provided)
+            if (onDateFilterChange) {
+              onDateFilterChange(from, to);
+            }
+          }}
         />
         {hasActiveDateFilters && (
           <Button
