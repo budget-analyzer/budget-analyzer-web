@@ -16,6 +16,7 @@ import { Calendar, Scale, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { formatLocalDate } from '@/lib/dateUtils';
+import { buildImportSuccessMessage } from '@/lib/importMessageBuilder';
 import { Transaction } from '@/types/transaction';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { useSearchParams } from 'react-router';
@@ -237,25 +238,18 @@ export function TransactionsPage() {
                 hasOldTransactions = earliestTransaction.date < earliestExchangeRateDate;
               }
 
-              // Build the base success message
-              const baseMessage = `Successfully imported ${count} transaction(s)`;
-              const filtersActive = hasActiveFilters();
+              // Build the success message based on conditions
+              const message = buildImportSuccessMessage({
+                count,
+                hasOldTransactions,
+                earliestRateText,
+                filtersActive: hasActiveFilters(),
+              });
 
-              if (hasOldTransactions && earliestRateText) {
-                // Show persistent warning for old transactions (no auto-dismiss)
-                // Use pre-computed memoized rate text
-                setImportMessage({
-                  type: 'warning',
-                  text: `${baseMessage}. Some transactions are older than our earliest exchange rate. Currency conversions will use ${earliestRateText}.${filtersActive ? ' Some may be hidden by your current filters. [Clear filters] to see all.' : ''}`,
-                });
-              } else {
-                // Normal success message
-                setImportMessage({
-                  type: 'success',
-                  text: filtersActive
-                    ? `${baseMessage}. Some may be hidden by your current filters. [Clear filters] to see all.`
-                    : baseMessage,
-                });
+              setImportMessage(message);
+
+              // Auto-dismiss success messages (but not warnings)
+              if (message.type === 'success') {
                 setTimeout(() => setImportMessage(null), 5000);
               }
             }}
