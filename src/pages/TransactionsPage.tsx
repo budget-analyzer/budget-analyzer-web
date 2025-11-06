@@ -14,10 +14,9 @@ import { ImportButton } from '@/components/ImportButton';
 import { ImportMessageBanner } from '@/components/ImportMessageBanner';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Calendar, Scale, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
-import { formatCurrency } from '@/lib/currency';
 import { buildExchangeRateAvailabilityText } from '@/lib/importMessageBuilder';
+import { buildMainStatsConfig, buildMonthlyStatsConfig } from '@/lib/transactionStatsConfig';
 import { Transaction } from '@/types/transaction';
 import { useAppSelector } from '@/store/hooks';
 
@@ -67,78 +66,14 @@ export function TransactionsPage() {
     exchangeRatesMap,
   });
 
-  // Memoize stat card configurations
+  // Build stat card configurations using utility functions
   const mainStats = useMemo(
-    () => [
-      {
-        title: 'Total Transactions',
-        value: stats.totalTransactions,
-        description: 'Filtered results',
-        icon: Wallet,
-      },
-      {
-        title: 'Total Credits',
-        value: formatCurrency(stats.totalCredits, displayCurrency),
-        description: 'Income received',
-        icon: TrendingUp,
-        iconClassName: 'text-green-600',
-        valueClassName: 'text-green-600 dark:text-green-400',
-      },
-      {
-        title: 'Total Debits',
-        value: formatCurrency(stats.totalDebits, displayCurrency),
-        description: 'Expenses paid',
-        icon: TrendingDown,
-        iconClassName: 'text-red-600',
-      },
-      {
-        title: 'Net Balance',
-        value: formatCurrency(stats.netBalance, displayCurrency),
-        description: 'Current period',
-        icon: Scale,
-        valueClassName:
-          stats.netBalance >= 0
-            ? 'text-green-600 dark:text-green-400'
-            : 'text-red-600 dark:text-red-400',
-      },
-    ],
+    () => buildMainStatsConfig(stats, displayCurrency),
     [stats, displayCurrency],
   );
 
   const monthlyStats = useMemo(
-    () => [
-      {
-        title: 'Avg Transactions/Month',
-        value: monthlyAverages.avgTransactionsPerMonth.toFixed(1),
-        description: `Based on ${monthlyAverages.dateRange}`,
-        icon: Calendar,
-      },
-      {
-        title: 'Avg Credits/Month',
-        value: formatCurrency(monthlyAverages.avgCreditsPerMonth, displayCurrency),
-        description: 'Average monthly income',
-        icon: TrendingUp,
-        iconClassName: 'text-green-600',
-        valueClassName: 'text-green-600 dark:text-green-400',
-      },
-      {
-        title: 'Avg Debits/Month',
-        value: formatCurrency(monthlyAverages.avgDebitsPerMonth, displayCurrency),
-        description: 'Average monthly expenses',
-        icon: TrendingDown,
-        iconClassName: 'text-red-600',
-      },
-      {
-        title: 'Avg Net Balance/Month',
-        value: formatCurrency(monthlyAverages.avgNetBalancePerMonth, displayCurrency),
-        description: 'Average monthly balance',
-        icon: Scale,
-        valueClassName:
-          monthlyAverages.avgNetBalancePerMonth >= 0
-            ? 'text-green-600 dark:text-green-400'
-            : 'text-red-600 dark:text-red-400',
-      },
-    ],
+    () => buildMonthlyStatsConfig(monthlyAverages, displayCurrency),
     [monthlyAverages, displayCurrency],
   );
 
