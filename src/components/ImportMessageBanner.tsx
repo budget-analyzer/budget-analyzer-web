@@ -29,11 +29,11 @@ export function ImportMessageBanner({ type, message, onClose }: ImportMessageBan
     >
       <div className="flex items-center gap-2">
         {type === 'success' ? (
-          <CheckCircle className="h-5 w-5" />
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
         ) : (
-          <AlertCircle className="h-5 w-5" />
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
         )}
-        <span className="font-medium">{message}</span>
+        <span className="font-medium whitespace-pre-line">{message}</span>
       </div>
       <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
         <X className="h-4 w-4" />

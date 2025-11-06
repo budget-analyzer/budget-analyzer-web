@@ -16,6 +16,7 @@ import { Calendar, Scale, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { formatLocalDate } from '@/lib/dateUtils';
+import { buildImportSuccessMessage } from '@/lib/importMessageBuilder';
 import { Transaction } from '@/types/transaction';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { useSearchParams } from 'react-router';
@@ -99,6 +100,11 @@ export function TransactionsPage() {
     },
     [searchParams, setSearchParams],
   );
+
+  // Helper to check if any filters are active
+  const hasActiveFilters = useCallback(() => {
+    return !!(searchParams.get('dateFrom') || searchParams.get('dateTo') || searchParams.get('q'));
+  }, [searchParams]);
 
   // Memoize the earliest rate text since it only depends on memoized values
   const earliestRateText = useMemo(() => {
@@ -232,19 +238,18 @@ export function TransactionsPage() {
                 hasOldTransactions = earliestTransaction.date < earliestExchangeRateDate;
               }
 
-              if (hasOldTransactions && earliestRateText) {
-                // Show persistent warning for old transactions (no auto-dismiss)
-                // Use pre-computed memoized rate text
-                setImportMessage({
-                  type: 'warning',
-                  text: `Successfully imported ${count} transaction(s). Some transactions are older than our earliest exchange rate. Currency conversions will use ${earliestRateText}.`,
-                });
-              } else {
-                // Normal success message with auto-dismiss
-                setImportMessage({
-                  type: 'success',
-                  text: `Successfully imported ${count} transaction(s)`,
-                });
+              // Build the success message based on conditions
+              const message = buildImportSuccessMessage({
+                count,
+                hasOldTransactions,
+                earliestRateText,
+                filtersActive: hasActiveFilters(),
+              });
+
+              setImportMessage(message);
+
+              // Auto-dismiss success messages (but not warnings)
+              if (message.type === 'success') {
                 setTimeout(() => setImportMessage(null), 5000);
               }
             }}
