@@ -1,16 +1,19 @@
 // src/components/analytics/MonthlySpendingGrid.tsx
 import { MonthlySpendingCard } from './MonthlySpendingCard';
 import { MonthlySpending } from '@/hooks/useAnalyticsData';
+import { ViewMode, TransactionTypeParam } from '@/pages/analytics/urlState';
 
 interface MonthlySpendingGridProps {
   monthlyData: MonthlySpending[];
   currency: string;
-  transactionType: 'debit' | 'credit';
+  viewMode: ViewMode;
+  transactionType: TransactionTypeParam;
 }
 
 export function MonthlySpendingGrid({
   monthlyData,
   currency,
+  viewMode,
   transactionType,
 }: MonthlySpendingGridProps) {
   return (
@@ -24,6 +27,7 @@ export function MonthlySpendingGrid({
           totalSpending={month.totalSpending}
           transactionCount={month.transactionCount}
           currency={currency}
+          viewMode={viewMode}
           transactionType={transactionType}
         />
       ))}

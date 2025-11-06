@@ -19,8 +19,16 @@ export interface MonthlySpending {
   transactionCount: number;
 }
 
+export interface YearlySpending {
+  year: number;
+  yearLabel: string;
+  totalSpending: number;
+  transactionCount: number;
+}
+
 export interface AnalyticsData {
   monthlySpending: MonthlySpending[];
+  yearlySpending: YearlySpending[];
   earliestYear: number;
   latestYear: number;
 }
@@ -130,8 +138,56 @@ export function useAnalyticsData(
     });
   }, [transactions, selectedYear, displayCurrency, exchangeRatesMap, transactionType]);
 
+  // Calculate yearly spending across all years
+  const yearlySpending = useMemo<YearlySpending[]>(() => {
+    if (!transactions || transactions.length === 0) {
+      return [];
+    }
+
+    // Group transactions by year and calculate totals
+    const yearlyData = new Map<number, { total: number; count: number }>();
+
+    // Process each transaction
+    transactions.forEach((transaction) => {
+      const transactionDate = parseLocalDate(transaction.date);
+      const transactionYear = transactionDate.getFullYear();
+
+      // Filter by transaction type
+      const expectedType = transactionType === 'debit' ? 'DEBIT' : 'CREDIT';
+      if (transaction.type !== expectedType) {
+        return;
+      }
+
+      // Convert amount to display currency using the proper conversion utility
+      const amountInDisplayCurrency = convertCurrency(
+        Math.abs(transaction.amount),
+        transaction.date,
+        transaction.currencyIsoCode,
+        displayCurrency,
+        exchangeRatesMap,
+      );
+
+      const existing = yearlyData.get(transactionYear) || { total: 0, count: 0 };
+      yearlyData.set(transactionYear, {
+        total: existing.total + amountInDisplayCurrency,
+        count: existing.count + 1,
+      });
+    });
+
+    // Convert map to array and format, sorted by year ascending
+    return Array.from(yearlyData.entries())
+      .map(([year, data]) => ({
+        year,
+        yearLabel: year.toString(),
+        totalSpending: data.total,
+        transactionCount: data.count,
+      }))
+      .sort((a, b) => a.year - b.year);
+  }, [transactions, displayCurrency, exchangeRatesMap, transactionType]);
+
   return {
     monthlySpending,
+    yearlySpending,
     earliestYear,
     latestYear,
   };
