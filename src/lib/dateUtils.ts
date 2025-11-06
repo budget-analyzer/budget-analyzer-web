@@ -200,6 +200,22 @@ export function getMonthKey(dateString: string): string {
 }
 
 /**
+ * Get the first and last day of a year as LocalDate strings (YYYY-MM-DD).
+ *
+ * @param year - Year (e.g., 2025)
+ * @returns Object with from and to dates in YYYY-MM-DD format
+ *
+ * @example
+ * getYearBounds(2025) // { from: '2025-01-01', to: '2025-12-31' }
+ */
+export function getYearBounds(year: number): { from: string; to: string } {
+  return {
+    from: `${year}-01-01`,
+    to: `${year}-12-31`,
+  };
+}
+
+/**
  * Get the current year.
  *
  * @returns Current year (e.g., 2025)

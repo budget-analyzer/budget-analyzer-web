@@ -8,31 +8,43 @@ import { ErrorBanner } from '@/components/ErrorBanner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PageHeader } from '@/components/PageHeader';
 import { MonthlySpendingGrid } from '@/components/analytics/MonthlySpendingGrid';
+import { YearlySpendingGrid } from '@/components/analytics/YearlySpendingGrid';
 import { YearSelector } from '@/components/YearSelector';
 import { ViewModeSelector } from '@/components/ViewModeSelector';
 import { TransactionTypeSelector } from '@/components/TransactionTypeSelector';
 import { useAppSelector } from '@/store/hooks';
 import { useSearchParams } from 'react-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { getCurrentYear } from '@/lib/dateUtils';
+import {
+  ANALYTICS_PARAMS,
+  VIEW_MODES,
+  TRANSACTION_TYPES,
+  ViewMode,
+  TransactionTypeParam,
+} from './analytics/urlState';
 
 export function AnalyticsPage() {
   const { data: transactions, isLoading, error, refetch } = useTransactions();
   const displayCurrency = useAppSelector((state) => state.ui.displayCurrency);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
-  const [transactionType, setTransactionType] = useState<'debit' | 'credit'>('debit');
+
+  // Get view mode and transaction type from URL params with defaults
+  const viewMode = (searchParams.get(ANALYTICS_PARAMS.VIEW_MODE) as ViewMode) || VIEW_MODES.MONTHLY;
+  const transactionType =
+    (searchParams.get(ANALYTICS_PARAMS.TRANSACTION_TYPE) as TransactionTypeParam) ||
+    TRANSACTION_TYPES.DEBIT;
 
   // Fetch exchange rates for currency conversion
   const { exchangeRatesMap, isLoading: isExchangeRatesLoading } = useExchangeRatesMap();
 
   // Get selected year from URL or default to current year
   const currentYear = useMemo(() => getCurrentYear(), []);
-  const yearParam = searchParams.get('year');
+  const yearParam = searchParams.get(ANALYTICS_PARAMS.YEAR);
   const selectedYear = yearParam ? parseInt(yearParam, 10) : currentYear;
 
   // Process analytics data with memoization
-  const { monthlySpending, earliestYear } = useAnalyticsData(
+  const { monthlySpending, yearlySpending, earliestYear } = useAnalyticsData(
     transactions,
     displayCurrency,
     exchangeRatesMap,
@@ -58,7 +70,7 @@ export function AnalyticsPage() {
 
       if (redirectYear !== null) {
         const params = new URLSearchParams(searchParams);
-        params.set('year', redirectYear.toString());
+        params.set(ANALYTICS_PARAMS.YEAR, redirectYear.toString());
         setSearchParams(params, { replace: true });
       }
     }
@@ -77,8 +89,28 @@ export function AnalyticsPage() {
   const handleYearChange = useCallback(
     (year: number) => {
       const params = new URLSearchParams(searchParams);
-      params.set('year', year.toString());
+      params.set(ANALYTICS_PARAMS.YEAR, year.toString());
       setSearchParams(params, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  // Handle view mode change
+  const handleViewModeChange = useCallback(
+    (mode: ViewMode) => {
+      const params = new URLSearchParams(searchParams);
+      params.set(ANALYTICS_PARAMS.VIEW_MODE, mode);
+      setSearchParams(params);
+    },
+    [searchParams, setSearchParams],
+  );
+
+  // Handle transaction type change
+  const handleTransactionTypeChange = useCallback(
+    (type: TransactionTypeParam) => {
+      const params = new URLSearchParams(searchParams);
+      params.set(ANALYTICS_PARAMS.TRANSACTION_TYPE, type);
+      setSearchParams(params);
     },
     [searchParams, setSearchParams],
   );
@@ -105,7 +137,11 @@ export function AnalyticsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Analytics"
-        description={`Monthly spending breakdown for ${selectedYear}`}
+        description={
+          viewMode === 'monthly'
+            ? `Monthly spending breakdown for ${selectedYear}`
+            : 'Yearly spending overview'
+        }
       />
 
       <motion.div
@@ -116,35 +152,50 @@ export function AnalyticsPage() {
         className="grid grid-cols-3 items-center gap-4"
       >
         <div className="flex justify-start">
-          <ViewModeSelector selectedMode={viewMode} onChange={setViewMode} />
+          <ViewModeSelector selectedMode={viewMode} onChange={handleViewModeChange} />
         </div>
         <div className="flex justify-center">
-          <TransactionTypeSelector selectedType={transactionType} onChange={setTransactionType} />
+          <TransactionTypeSelector
+            selectedType={transactionType}
+            onChange={handleTransactionTypeChange}
+          />
         </div>
         <div className="flex justify-end">
-          <YearSelector
-            selectedYear={selectedYear}
-            earliestYear={earliestYear}
-            latestYear={currentYear}
-            onChange={handleYearChange}
-          />
+          {viewMode === 'monthly' && (
+            <YearSelector
+              selectedYear={selectedYear}
+              earliestYear={earliestYear}
+              latestYear={currentYear}
+              onChange={handleYearChange}
+            />
+          )}
         </div>
       </motion.div>
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={selectedYear}
+          key={viewMode === 'monthly' ? selectedYear : 'yearly'}
           variants={fadeVariants}
           initial="initial"
           animate="animate"
           exit="exit"
           transition={fadeTransition}
         >
-          <MonthlySpendingGrid
-            monthlyData={monthlySpending}
-            currency={displayCurrency}
-            transactionType={transactionType}
-          />
+          {viewMode === 'monthly' ? (
+            <MonthlySpendingGrid
+              monthlyData={monthlySpending}
+              currency={displayCurrency}
+              viewMode={viewMode}
+              transactionType={transactionType}
+            />
+          ) : (
+            <YearlySpendingGrid
+              yearlyData={yearlySpending}
+              currency={displayCurrency}
+              viewMode={viewMode}
+              transactionType={transactionType}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
 
