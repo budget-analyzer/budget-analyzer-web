@@ -63,52 +63,31 @@ This project follows the **Bulletproof React** architecture pattern with **featu
 
 ```
 src/
-├── lib/                    # Third-party library configurations ONLY
-│   └── animations.ts       # Framer Motion preset configs
+├── features/              # Feature modules (PRIMARY organization)
+│   ├── transactions/      # Transaction management feature
+│   └── analytics/         # Analytics and statistics feature
 │
-├── utils/                  # Generic utility functions
-│   └── cn.ts              # Tailwind class merger
-│
-├── features/              # Feature-based modules (PRIMARY organization)
-│   ├── transactions/
-│   │   ├── components/    # Transaction-specific components
-│   │   ├── hooks/         # Transaction data hooks
-│   │   ├── utils/         # Transaction utilities (currency, dates, navigation)
-│   │   └── pages/         # Transaction pages
-│   │
-│   ├── import/
-│   │   ├── components/    # Import UI components
-│   │   ├── hooks/         # Import logic hooks
-│   │   └── utils/         # Import message builders
-│   │
-│   └── analytics/
-│       ├── components/    # Analytics visualization components
-│       ├── hooks/         # Analytics data hooks
-│       ├── utils/         # Analytics URL state
-│       └── pages/         # Analytics pages
-│
-├── components/            # ONLY truly shared components
-│   ├── Layout.tsx
-│   ├── PageHeader.tsx
-│   ├── ErrorBanner.tsx
+├── components/            # Shared components across features
 │   └── ui/               # Shadcn/UI primitives
 │
-├── hooks/                # ONLY truly shared hooks
-│   └── useCurrencies.ts
-│
-├── api/                  # API client and endpoints
-├── store/                # Redux store
-├── types/                # Shared TypeScript types
-└── mocks/                # MSW handlers for testing
+├── api/                  # API client, endpoints, and mock data
+├── hooks/                # Shared React hooks
+├── store/                # Redux store (UI state only)
+├── types/                # Shared TypeScript type definitions
+├── utils/                # Generic utility functions
+├── lib/                  # Third-party library configurations
+├── mocks/                # MSW handlers for testing
+└── test/                 # Test setup and utilities
 ```
 
 **Key Principles:**
 
 - **features/ is PRIMARY** - Most code lives in feature folders organized by business capability
-- **lib/ = Third-party configs** - NOT your own utilities or domain logic
-- **utils/ = Your utilities** - Generic helpers like `cn()`
+- **Feature structure** - Each feature contains: `components/`, `hooks/`, `pages/`, `utils/`
+- **lib/ = Third-party configs** - NOT your own utilities or domain logic (e.g., Framer Motion presets)
+- **utils/ = Your utilities** - Generic helpers used across features (e.g., `cn()` for Tailwind)
 - **Feature isolation** - Features don't import from other features
-- **Shared stays flat** - Truly shared components/hooks at top level, not nested
+- **Shared stays flat** - Truly shared components/hooks at top level, not deeply nested
 - **Co-locate** - Everything related to a feature lives in its folder
 
 ### State Management Strategy
