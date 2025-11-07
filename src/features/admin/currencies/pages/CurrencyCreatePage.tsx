@@ -63,7 +63,7 @@ export function CurrencyCreatePage() {
           if (error instanceof ApiError) {
             if (error.response.code === 'INVALID_PROVIDER_SERIES_ID') {
               errorMessage =
-                'The Provider Series ID is invalid. Please check the FRED database for the correct series ID.';
+                'The Provider Series ID is invalid. Please check the FRED documentation for the correct series ID.';
             } else {
               errorMessage = error.message;
             }
