@@ -1,10 +1,18 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ArrowLeft, Edit3 } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { MessageBanner } from '@/components/MessageBanner';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CurrencyForm } from '../components/CurrencyForm';
 import { useCurrency, useUpdateCurrency } from '../hooks/useCurrencies';
+import { ApiError } from '@/types/apiError';
+
+interface Message {
+  type: 'success' | 'error' | 'warning';
+  text: string;
+}
 
 /**
  * Edit existing currency page
@@ -16,6 +24,25 @@ export function CurrencyEditPage() {
 
   const { data: currency, isLoading, error } = useCurrency(currencyId);
   const { mutate: updateCurrency, isPending } = useUpdateCurrency();
+  const [message, setMessage] = useState<Message | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const clearMessage = useCallback(() => {
+    setMessage(null);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
   const handleSubmit = useCallback(
     (data: { currencyCode: string; providerSeriesId: string; enabled: boolean }) => {
@@ -28,8 +55,37 @@ export function CurrencyEditPage() {
           },
         },
         {
-          onSuccess: () => {
-            navigate('/admin/currencies');
+          onSuccess: (updatedCurrency) => {
+            setMessage({
+              type: 'success',
+              text: `Currency ${updatedCurrency.currencyCode} updated successfully`,
+            });
+
+            // Auto-dismiss success message and navigate after 2 seconds
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+            }
+            timeoutRef.current = setTimeout(() => {
+              navigate('/admin/currencies');
+            }, 2000);
+          },
+          onError: (error: Error) => {
+            // Check for specific error code
+            let errorMessage = 'Failed to update currency';
+
+            if (error instanceof ApiError) {
+              if (error.response.code === 'INVALID_PROVIDER_SERIES_ID') {
+                errorMessage =
+                  'The Provider Series ID is invalid. Please check the FRED database for the correct series ID.';
+              } else {
+                errorMessage = error.message;
+              }
+            }
+
+            setMessage({
+              type: 'error',
+              text: errorMessage,
+            });
           },
         },
       );
@@ -81,13 +137,23 @@ export function CurrencyEditPage() {
 
         {/* Form */}
         {!isLoading && !error && currency && (
-          <div className="max-w-2xl rounded-xl border bg-card p-8 shadow-sm">
-            <CurrencyForm
-              initialData={currency}
-              onSubmit={handleSubmit}
-              isSubmitting={isPending}
-              mode="edit"
-            />
+          <div className="max-w-2xl space-y-4">
+            {/* Message Banner */}
+            <AnimatePresence mode="wait">
+              {message && (
+                <MessageBanner type={message.type} message={message.text} onClose={clearMessage} />
+              )}
+            </AnimatePresence>
+
+            {/* Form */}
+            <div className="rounded-xl border bg-card p-8 shadow-sm">
+              <CurrencyForm
+                initialData={currency}
+                onSubmit={handleSubmit}
+                isSubmitting={isPending}
+                mode="edit"
+              />
+            </div>
           </div>
         )}
       </div>

@@ -1,9 +1,17 @@
 import { useNavigate } from 'react-router-dom';
-import { useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ArrowLeft, PlusCircle } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { MessageBanner } from '@/components/MessageBanner';
 import { CurrencyForm } from '../components/CurrencyForm';
 import { useCreateCurrency } from '../hooks/useCurrencies';
+import { ApiError } from '@/types/apiError';
+
+interface Message {
+  type: 'success' | 'error' | 'warning';
+  text: string;
+}
 
 /**
  * Create new currency page
@@ -11,12 +19,60 @@ import { useCreateCurrency } from '../hooks/useCurrencies';
 export function CurrencyCreatePage() {
   const navigate = useNavigate();
   const { mutate: createCurrency, isPending } = useCreateCurrency();
+  const [message, setMessage] = useState<Message | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const clearMessage = useCallback(() => {
+    setMessage(null);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
   const handleSubmit = useCallback(
     (data: { currencyCode: string; providerSeriesId: string; enabled: boolean }) => {
       createCurrency(data, {
-        onSuccess: () => {
-          navigate('/admin/currencies');
+        onSuccess: (newCurrency) => {
+          setMessage({
+            type: 'success',
+            text: `Currency ${newCurrency.currencyCode} created successfully`,
+          });
+
+          // Auto-dismiss success message and navigate after 2 seconds
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+          timeoutRef.current = setTimeout(() => {
+            navigate('/admin/currencies');
+          }, 2000);
+        },
+        onError: (error: Error) => {
+          // Check for specific error code
+          let errorMessage = 'Failed to create currency';
+
+          if (error instanceof ApiError) {
+            if (error.response.code === 'INVALID_PROVIDER_SERIES_ID') {
+              errorMessage =
+                'The Provider Series ID is invalid. Please check the FRED database for the correct series ID.';
+            } else {
+              errorMessage = error.message;
+            }
+          }
+
+          setMessage({
+            type: 'error',
+            text: errorMessage,
+          });
         },
       });
     },
@@ -47,8 +103,18 @@ export function CurrencyCreatePage() {
           </div>
         </div>
 
-        <div className="max-w-2xl rounded-xl border bg-card p-8 shadow-sm">
-          <CurrencyForm onSubmit={handleSubmit} isSubmitting={isPending} mode="create" />
+        <div className="max-w-2xl space-y-4">
+          {/* Message Banner */}
+          <AnimatePresence mode="wait">
+            {message && (
+              <MessageBanner type={message.type} message={message.text} onClose={clearMessage} />
+            )}
+          </AnimatePresence>
+
+          {/* Form */}
+          <div className="rounded-xl border bg-card p-8 shadow-sm">
+            <CurrencyForm onSubmit={handleSubmit} isSubmitting={isPending} mode="create" />
+          </div>
         </div>
       </div>
     </div>
