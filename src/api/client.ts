@@ -1,6 +1,7 @@
 // src/api/client.ts
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import { ApiError, ApiErrorResponse } from '@/types/apiError';
+import { getValidToken, removeToken } from '@/utils/jwt';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -12,10 +13,13 @@ export const apiClient: AxiosInstance = axios.create({
   timeout: 10000,
 });
 
-// Request interceptor
+// Request interceptor - inject JWT token
 apiClient.interceptors.request.use(
   (config) => {
-    // Add any auth tokens here if needed
+    const token = getValidToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -27,6 +31,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiErrorResponse>) => {
+    // Handle 401 Unauthorized - clear token and redirect to login
+    if (error.response?.status === 401) {
+      removeToken();
+      // Redirect will be handled by React Query error boundaries or useAuth hook
+    }
+
     if (error.response?.data) {
       // API returned a structured error
       const apiErrorResponse = error.response.data;
