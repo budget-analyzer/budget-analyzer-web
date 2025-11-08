@@ -18,21 +18,28 @@ export interface ImportSuccessMessage {
  * Builds text describing the earliest available exchange rate.
  *
  * @param date - The earliest exchange rate date (LocalDate format: YYYY-MM-DD)
- * @param ratesMap - Map of dates to exchange rate responses
+ * @param ratesMap - Nested map: date -> (targetCurrency -> ExchangeRateResponse)
  * @returns Formatted text describing the rate, or null if no date provided
  */
 export function buildExchangeRateAvailabilityText(
   date: string | null,
-  ratesMap: Map<string, ExchangeRateResponse>,
+  ratesMap: Map<string, Map<string, ExchangeRateResponse>>,
 ): string | null {
   if (!date) return null;
 
-  const earliestRate = ratesMap.get(date);
   const formattedDate = formatLocalDate(date);
 
-  return earliestRate
-    ? `the rate of ${earliestRate.rate.toFixed(4)} ${earliestRate.targetCurrency}/${earliestRate.baseCurrency} from ${formattedDate}`
-    : `the earliest available rate from ${formattedDate}`;
+  // Get the currency map for this date
+  const currencyMap = ratesMap.get(date);
+
+  if (!currencyMap || currencyMap.size === 0) {
+    return `the earliest available rate from ${formattedDate}`;
+  }
+
+  // Get the first currency rate as an example (they all have the same date)
+  const firstRate = currencyMap.values().next().value as ExchangeRateResponse;
+
+  return `the rate of ${firstRate.rate.toFixed(4)} ${firstRate.targetCurrency}/${firstRate.baseCurrency} from ${formattedDate}`;
 }
 
 /**

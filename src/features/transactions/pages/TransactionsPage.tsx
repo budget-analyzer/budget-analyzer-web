@@ -36,7 +36,7 @@ export function TransactionsPage() {
     exchangeRatesMap,
     earliestExchangeRateDate,
     isLoading: isExchangeRatesLoading,
-  } = useExchangeRatesMap();
+  } = useExchangeRatesMap({ transactions, displayCurrency });
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>(
     transactions || [],
   );
