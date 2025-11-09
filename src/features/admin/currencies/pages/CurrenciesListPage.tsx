@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
-import { useCurrencies } from '../hooks/useCurrencies';
+import { useCurrencies } from '@/hooks/useCurrencies';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { formatTimestamp } from '@/utils/dates';
 
