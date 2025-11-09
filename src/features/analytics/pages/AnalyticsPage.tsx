@@ -47,7 +47,13 @@ export function AnalyticsPage() {
 
   // Process analytics data with memoization
   const { monthlySpending, yearlySpending, earliestYear, latestYear, yearsWithTransactions } =
-    useAnalyticsData(transactions, displayCurrency, exchangeRatesMap, selectedYear, transactionType);
+    useAnalyticsData(
+      transactions,
+      displayCurrency,
+      exchangeRatesMap,
+      selectedYear,
+      transactionType,
+    );
 
   // Initialize to latest year with transactions if no year param exists
   // Or redirect if selected year is out of valid range
