@@ -117,40 +117,26 @@ export const useExchangeRatesMap = (params: { displayCurrency: string }) => {
 
   // Always fetch the full date range (2000-01-01 onwards)
   // This prevents refetching when transactions are filtered, deleted, or when viewing single transactions
-  const dateRange = useMemo<{ startDate?: string; endDate?: string }>(() => {
-    // Only fetch rates if we have transactions (and thus know which currencies we need)
-    if (!transactions || transactions.length === 0) {
-      return { startDate: undefined, endDate: undefined };
-    }
-
-    return {
-      startDate: '2000-01-01',
-      endDate: undefined, // Fetch all available rates from start date onwards
-    };
-  }, [transactions]);
+  const startDate = transactions?.length ? '2000-01-01' : undefined;
 
   // Fetch exchange rates for needed currencies in parallel using useQueries
   // Use the combine option to efficiently merge results and avoid unnecessary re-renders
   const combinedResult = useQueries({
     queries: currenciesNeeded.map((targetCurrency: string) => ({
-      queryKey: ['exchangeRates', targetCurrency, dateRange.startDate, dateRange.endDate],
+      queryKey: ['exchangeRates', targetCurrency, startDate],
       queryFn: async () => {
         if (USE_MOCK_DATA) {
           await new Promise((resolve) => setTimeout(resolve, 400));
-          // Filter by currency and date range if provided
+          // Filter by currency and start date if provided
           let filtered = mockExchangeRates.filter((rate) => rate.targetCurrency === targetCurrency);
-          if (dateRange.startDate) {
-            filtered = filtered.filter((rate) => rate.date >= dateRange.startDate!);
-          }
-          if (dateRange.endDate) {
-            filtered = filtered.filter((rate) => rate.date <= dateRange.endDate!);
+          if (startDate) {
+            filtered = filtered.filter((rate) => rate.date >= startDate);
           }
           return filtered;
         }
         return currencyApi.getExchangeRates({
           targetCurrency,
-          startDate: dateRange.startDate,
-          endDate: dateRange.endDate,
+          startDate,
         });
       },
       staleTime: Infinity,
