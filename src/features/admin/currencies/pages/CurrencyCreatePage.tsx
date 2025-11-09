@@ -7,6 +7,7 @@ import { MessageBanner } from '@/components/MessageBanner';
 import { CurrencyForm } from '@/features/admin/currencies/components/CurrencyForm';
 import { useCreateCurrency } from '@/hooks/useCurrencies';
 import { ApiError } from '@/types/apiError';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 /**
  * Create new currency page
@@ -35,16 +36,13 @@ export function CurrencyCreatePage() {
           });
         },
         onError: (error: Error) => {
-          // Check for specific error code and show error on current page
+          // Map 422 error codes to user-friendly messages
           let message = 'Failed to create currency';
 
-          if (error instanceof ApiError) {
-            if (error.response.code === 'INVALID_PROVIDER_SERIES_ID') {
-              message =
-                'The Provider Series ID is invalid. Please check the FRED documentation for the correct series ID.';
-            } else {
-              message = error.message;
-            }
+          if (error instanceof ApiError && error.status === 422) {
+            message = getErrorMessage(error.response.code, error.response.message);
+          } else if (error instanceof ApiError) {
+            message = error.response.message;
           }
 
           setErrorMessage(message);

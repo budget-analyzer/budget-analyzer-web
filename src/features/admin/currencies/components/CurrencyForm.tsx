@@ -61,10 +61,10 @@ export function CurrencyForm({ initialData, onSubmit, isSubmitting, mode }: Curr
         </p>
       </div>
 
-      {/* Provider Series ID */}
+      {/* FRED Series ID */}
       <div className="space-y-2">
         <label htmlFor="providerSeriesId" className="text-sm font-medium">
-          Provider Series ID *
+          FRED Series ID *
         </label>
         <Input
           id="providerSeriesId"
@@ -72,10 +72,13 @@ export function CurrencyForm({ initialData, onSubmit, isSubmitting, mode }: Curr
           onChange={(e) => setProviderSeriesId(e.target.value.toUpperCase())}
           placeholder="DEXUSEU"
           maxLength={50}
+          disabled={mode === 'edit'} // FRED series ID is immutable
           required
         />
         <p className="text-xs text-muted-foreground">
-          FRED series ID for this currency (e.g., DEXUSEU for USD to EUR)
+          {mode === 'edit'
+            ? 'FRED series ID cannot be changed after creation'
+            : 'Federal Reserve Economic Data series ID (e.g., DEXUSEU for USD to EUR)'}
         </p>
       </div>
 

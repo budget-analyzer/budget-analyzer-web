@@ -275,6 +275,11 @@ const handleDateFilterChange = useCallback(
 - `ErrorBoundary.tsx` - React error boundary for component crashes
 - `ErrorBanner.tsx` - Displays API errors with retry functionality
 - All API errors are normalized through the `ApiError` class
+- **CRITICAL**: [src/utils/errorMessages.ts](src/utils/errorMessages.ts) maps 422 error codes to user-friendly messages
+  - Error codes are defined in the OpenAPI spec (see `docs/budget-analyzer-api.yaml` for all 422 examples)
+  - **ALWAYS** keep `errorMessages.ts` in sync with the API spec's error codes
+  - When adding/updating API endpoints, check the spec's 422 response examples and update the error message mappings
+  - Error messages should be concise (no periods) to match the API's message format and toast/banner conventions
 
 **Animation Configuration**:
 

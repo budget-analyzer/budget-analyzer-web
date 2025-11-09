@@ -1,6 +1,8 @@
 // src/features/transactions/hooks/useImportMessageHandler.ts
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { buildImportSuccessMessage } from '@/features/transactions/utils/messageBuilder';
+import { ApiError } from '@/types/apiError';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 interface ImportMessage {
   type: 'success' | 'error';
@@ -71,10 +73,21 @@ export function useImportMessageHandler({
     [hasActiveFilters],
   );
 
-  const handleImportError = useCallback((error: { message?: string }) => {
+  const handleImportError = useCallback((error: unknown) => {
+    let message = 'Failed to import transactions';
+
+    // Map 422 error codes to user-friendly messages
+    if (error instanceof ApiError && error.status === 422) {
+      message = getErrorMessage(error.response.code, error.response.message);
+    } else if (error instanceof ApiError) {
+      message = error.response.message;
+    } else if (error && typeof error === 'object' && 'message' in error) {
+      message = String(error.message);
+    }
+
     setImportMessage({
       type: 'error',
-      text: error.message || 'Failed to import transactions',
+      text: message,
     });
   }, []);
 
