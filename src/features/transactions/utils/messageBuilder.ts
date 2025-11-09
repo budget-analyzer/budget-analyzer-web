@@ -1,6 +1,5 @@
 // src/features/transactions/utils/messageBuilder.ts
 import { formatLocalDate } from '@/utils/dates';
-import { ExchangeRateResponse } from '@/types/currency';
 
 export interface ImportSuccessMessageParams {
   count: number;
@@ -15,31 +14,24 @@ export interface ImportSuccessMessage {
 }
 
 /**
- * Builds text describing the earliest available exchange rate.
+ * Builds text describing the earliest available exchange rate for a specific currency.
  *
  * @param date - The earliest exchange rate date (LocalDate format: YYYY-MM-DD)
- * @param ratesMap - Nested map: date -> (targetCurrency -> ExchangeRateResponse)
+ * @param rate - The exchange rate value
+ * @param targetCurrency - The target currency code (e.g., "USD")
+ * @param baseCurrency - The base currency code (e.g., "JPY")
  * @returns Formatted text describing the rate, or null if no date provided
  */
 export function buildExchangeRateAvailabilityText(
   date: string | null,
-  ratesMap: Map<string, Map<string, ExchangeRateResponse>>,
+  rate: number,
+  targetCurrency: string,
+  baseCurrency: string,
 ): string | null {
   if (!date) return null;
 
   const formattedDate = formatLocalDate(date);
-
-  // Get the currency map for this date
-  const currencyMap = ratesMap.get(date);
-
-  if (!currencyMap || currencyMap.size === 0) {
-    return `the earliest available rate from ${formattedDate}`;
-  }
-
-  // Get the first currency rate as an example (they all have the same date)
-  const firstRate = currencyMap.values().next().value as ExchangeRateResponse;
-
-  return `the rate of ${firstRate.rate.toFixed(4)} ${firstRate.targetCurrency}/${firstRate.baseCurrency} from ${formattedDate}`;
+  return `the rate of ${rate.toFixed(4)} ${targetCurrency}/${baseCurrency} from ${formattedDate}`;
 }
 
 /**
