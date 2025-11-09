@@ -40,28 +40,32 @@ export function AnalyticsPage() {
     displayCurrency,
   });
 
-  // Get selected year from URL or default to current year
+  // Get selected year from URL or default to current year (will be updated to latestYear with data)
   const currentYear = useMemo(() => getCurrentYear(), []);
   const yearParam = searchParams.get(ANALYTICS_PARAMS.YEAR);
   const selectedYear = yearParam ? parseInt(yearParam, 10) : currentYear;
 
   // Process analytics data with memoization
-  const { monthlySpending, yearlySpending, earliestYear, yearsWithTransactions } = useAnalyticsData(
-    transactions,
-    displayCurrency,
-    exchangeRatesMap,
-    selectedYear,
-    transactionType,
-  );
+  const { monthlySpending, yearlySpending, earliestYear, latestYear, yearsWithTransactions } =
+    useAnalyticsData(transactions, displayCurrency, exchangeRatesMap, selectedYear, transactionType);
 
-  // Redirect if selected year is out of valid range (before earliest transaction or after current year)
-  // Only run after transactions have loaded to avoid redirecting based on temporary default values
+  // Initialize to latest year with transactions if no year param exists
+  // Or redirect if selected year is out of valid range
   useEffect(() => {
     if (isLoading || !transactions) {
       return;
     }
 
-    if (yearParam && !isNaN(selectedYear)) {
+    // If no year parameter, default to the latest year with actual transactions
+    if (!yearParam) {
+      const params = new URLSearchParams(searchParams);
+      params.set(ANALYTICS_PARAMS.YEAR, latestYear.toString());
+      setSearchParams(params, { replace: true });
+      return;
+    }
+
+    // If year parameter exists but is out of valid range, redirect to nearest valid year
+    if (!isNaN(selectedYear)) {
       let redirectYear: number | null = null;
 
       if (selectedYear < earliestYear) {
@@ -82,6 +86,7 @@ export function AnalyticsPage() {
     yearParam,
     selectedYear,
     earliestYear,
+    latestYear,
     currentYear,
     searchParams,
     setSearchParams,
