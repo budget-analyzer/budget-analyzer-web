@@ -51,7 +51,6 @@ export function TransactionsPage() {
   const { importMessage, handleImportSuccess, handleImportError, clearImportMessage } =
     useImportMessageHandler({
       exchangeRatesData,
-      displayCurrency,
       hasActiveFilters,
     });
 

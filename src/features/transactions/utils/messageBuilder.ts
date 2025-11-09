@@ -1,5 +1,4 @@
 // src/features/transactions/utils/messageBuilder.ts
-import { formatLocalDate } from '@/utils/dates';
 
 export interface ImportSuccessMessageParams {
   count: number;
@@ -14,24 +13,12 @@ export interface ImportSuccessMessage {
 }
 
 /**
- * Builds text describing the earliest available exchange rate for a specific currency.
+ * Builds generic text for when transactions are older than available exchange rates.
  *
- * @param date - The earliest exchange rate date (LocalDate format: YYYY-MM-DD)
- * @param rate - The exchange rate value
- * @param targetCurrency - The target currency code (e.g., "USD")
- * @param baseCurrency - The base currency code (e.g., "JPY")
- * @returns Formatted text describing the rate, or null if no date provided
+ * @returns Generic warning text about using earliest available rates
  */
-export function buildExchangeRateAvailabilityText(
-  date: string | null,
-  rate: number,
-  targetCurrency: string,
-  baseCurrency: string,
-): string | null {
-  if (!date) return null;
-
-  const formattedDate = formatLocalDate(date);
-  return `the rate of ${rate.toFixed(4)} ${targetCurrency}/${baseCurrency} from ${formattedDate}`;
+export function buildExchangeRateAvailabilityText(): string {
+  return `the earliest available rates`;
 }
 
 /**

@@ -14,7 +14,6 @@ interface ImportMessage {
 
 interface UseImportMessageHandlerParams {
   exchangeRatesData: ExchangeRateResponse[];
-  displayCurrency: string;
   hasActiveFilters: () => boolean;
 }
 
@@ -28,33 +27,29 @@ interface UseImportMessageHandlerReturn {
 /**
  * Custom hook to handle import success/error messages with auto-dismiss functionality
  *
- * @param params Configuration including exchange rates data, display currency, and filter checker
+ * @param params Configuration including exchange rates data and filter checker
  * @returns Object with import message state and handlers
  */
 export function useImportMessageHandler({
   exchangeRatesData,
-  displayCurrency,
   hasActiveFilters,
 }: UseImportMessageHandlerParams): UseImportMessageHandlerReturn {
   const [importMessage, setImportMessage] = useState<ImportMessage | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Memoize a map of currency pairs to their earliest exchange rate
-  // Key format: "TARGETCURRENCY_BASECURRENCY" (e.g., "USD_JPY")
-  const earliestRatesByCurrency = useMemo(() => {
-    const map = new Map<string, ExchangeRateResponse>();
+  // Memoize the earliest exchange rate date across all currencies
+  const earliestExchangeRateDate = useMemo(() => {
+    if (exchangeRatesData.length === 0) return null;
 
-    exchangeRatesData.forEach((rate) => {
-      const key = `${rate.targetCurrency}_${rate.baseCurrency}`;
-      const existing = map.get(key);
+    // Find the earliest date across all rates
+    const earliestDate = exchangeRatesData.reduce(
+      (earliest, rate) => {
+        return !earliest || rate.date < earliest ? rate.date : earliest;
+      },
+      null as string | null,
+    );
 
-      // Keep the rate with the earliest date
-      if (!existing || rate.date < existing.date) {
-        map.set(key, rate);
-      }
-    });
-
-    return map;
+    return earliestDate;
   }, [exchangeRatesData]);
 
   // Clean up timeout on unmount
@@ -88,32 +83,20 @@ export function useImportMessageHandler({
         return;
       }
 
-      // Get the currency from imported transactions (all transactions in an import have the same currency)
-      const importCurrency = importedTransactions[0].currencyIsoCode;
-
       // Find the earliest transaction date
       const earliestTransaction = importedTransactions.reduce((earliest, current) =>
         current.date < earliest.date ? current : earliest,
       );
 
-      // Look up the earliest exchange rate for this currency pair (O(1) lookup)
-      const currencyPairKey = `${displayCurrency}_${importCurrency}`;
-      const earliestRate = earliestRatesByCurrency.get(currencyPairKey);
-
+      // Check if any transactions are older than our earliest exchange rate
       let hasOldTransactions = false;
       let earliestRateText: string | null = null;
 
-      if (earliestRate) {
-        // Check if transaction is older than available rates for this currency
-        hasOldTransactions = earliestTransaction.date < earliestRate.date;
+      if (earliestExchangeRateDate) {
+        hasOldTransactions = earliestTransaction.date < earliestExchangeRateDate;
 
         if (hasOldTransactions) {
-          earliestRateText = buildExchangeRateAvailabilityText(
-            earliestRate.date,
-            earliestRate.rate,
-            earliestRate.targetCurrency,
-            earliestRate.baseCurrency,
-          );
+          earliestRateText = buildExchangeRateAvailabilityText();
         }
       }
 
@@ -140,7 +123,7 @@ export function useImportMessageHandler({
         }, 5000);
       }
     },
-    [earliestRatesByCurrency, displayCurrency, hasActiveFilters],
+    [earliestExchangeRateDate, hasActiveFilters],
   );
 
   const handleImportError = useCallback((error: { message?: string }) => {
