@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Plus, Pencil, Coins } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
@@ -33,6 +33,19 @@ export function CurrenciesListPage() {
   const { data: currencies, isLoading, error } = useCurrencies();
   const [message, setMessage] = useState<LocationState['message'] | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sort currencies: enabled first (alphabetically), then disabled (alphabetically)
+  const sortedCurrencies = useMemo(() => {
+    if (!currencies) return [];
+    return [...currencies].sort((a, b) => {
+      // If one is enabled and the other is not, enabled comes first
+      if (a.enabled !== b.enabled) {
+        return a.enabled ? -1 : 1;
+      }
+      // Both have same enabled status, sort alphabetically by currency code
+      return a.currencyCode.localeCompare(b.currencyCode);
+    });
+  }, [currencies]);
 
   // Handle message from navigation state (e.g., after create/edit)
   useEffect(() => {
@@ -141,7 +154,7 @@ export function CurrenciesListPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currencies.length === 0 ? (
+                {sortedCurrencies.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
@@ -156,7 +169,7 @@ export function CurrenciesListPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  currencies.map((currency) => (
+                  sortedCurrencies.map((currency) => (
                     <TableRow
                       key={currency.id}
                       className="group transition-colors hover:bg-muted/50"
