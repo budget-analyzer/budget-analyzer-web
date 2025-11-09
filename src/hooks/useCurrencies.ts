@@ -1,7 +1,18 @@
 // src/hooks/useCurrencies.ts
-import { useQuery, useQueries, UseQueryResult } from '@tanstack/react-query';
+import {
+  useQuery,
+  useQueries,
+  useMutation,
+  useQueryClient,
+  UseQueryResult,
+} from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { CurrencySeriesResponse, ExchangeRateResponse } from '@/types/currency';
+import {
+  CurrencySeriesResponse,
+  ExchangeRateResponse,
+  CurrencySeriesCreateRequest,
+  CurrencySeriesUpdateRequest,
+} from '@/types/currency';
 import { currencyApi } from '@/api/currencyApi';
 import { mockCurrencies, mockExchangeRates } from '@/api/mockData';
 import { ApiError } from '@/types/apiError';
@@ -9,6 +20,17 @@ import { buildExchangeRateMap } from '@/utils/currency';
 import { useTransactions } from '@/hooks/useTransactions';
 
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+/**
+ * Query key factory for currencies
+ */
+const currenciesKeys = {
+  all: ['currencies'] as const,
+  lists: () => [...currenciesKeys.all, 'list'] as const,
+  list: (enabledOnly: boolean) => [...currenciesKeys.lists(), { enabledOnly }] as const,
+  details: () => [...currenciesKeys.all, 'detail'] as const,
+  detail: (id: number) => [...currenciesKeys.details(), id] as const,
+};
 
 /**
  * Fetch the list of supported currency series
@@ -192,4 +214,110 @@ export const useExchangeRatesMap = (params: { displayCurrency: string }) => {
     isLoading,
     error,
   };
+};
+
+/**
+ * Fetch a single currency by ID
+ * Used in admin edit forms
+ */
+export const useCurrency = (id: number): UseQueryResult<CurrencySeriesResponse, ApiError> => {
+  return useQuery<CurrencySeriesResponse, ApiError>({
+    queryKey: currenciesKeys.detail(id),
+    queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const currency = mockCurrencies.find((c) => c.id === id);
+        if (!currency) {
+          throw new ApiError(404, {
+            type: 'NOT_FOUND',
+            message: `Currency with id ${id} not found`,
+          });
+        }
+        return currency;
+      }
+      return currencyApi.getCurrencyById(id);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+};
+
+/**
+ * Create a new currency series
+ * Admin mutation hook
+ */
+export const useCreateCurrency = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CurrencySeriesCreateRequest) => {
+      if (USE_MOCK_DATA) {
+        // Simulate network delay and return mock response
+        return new Promise<CurrencySeriesResponse>((resolve) => {
+          setTimeout(() => {
+            const newCurrency: CurrencySeriesResponse = {
+              id: Math.max(...mockCurrencies.map((c) => c.id)) + 1,
+              currencyCode: data.currencyCode,
+              providerSeriesId: data.providerSeriesId,
+              enabled: data.enabled ?? true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            mockCurrencies.push(newCurrency);
+            resolve(newCurrency);
+          }, 500);
+        });
+      }
+      return currencyApi.createCurrency(data);
+    },
+    onSuccess: () => {
+      // Invalidate all currency lists to refetch with new data
+      queryClient.invalidateQueries({ queryKey: currenciesKeys.lists() });
+    },
+  });
+};
+
+/**
+ * Update an existing currency series
+ * Admin mutation hook
+ */
+export const useUpdateCurrency = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CurrencySeriesUpdateRequest }) => {
+      if (USE_MOCK_DATA) {
+        // Simulate network delay and return mock response
+        return new Promise<CurrencySeriesResponse>((resolve, reject) => {
+          setTimeout(() => {
+            const currency = mockCurrencies.find((c) => c.id === id);
+            if (!currency) {
+              reject(
+                new ApiError(404, {
+                  type: 'NOT_FOUND',
+                  message: `Currency with id ${id} not found`,
+                }),
+              );
+              return;
+            }
+            const updatedCurrency = {
+              ...currency,
+              enabled: data.enabled,
+              updatedAt: new Date().toISOString(),
+            };
+            const index = mockCurrencies.findIndex((c) => c.id === id);
+            mockCurrencies[index] = updatedCurrency;
+            resolve(updatedCurrency);
+          }, 500);
+        });
+      }
+      return currencyApi.updateCurrency(id, data);
+    },
+    onSuccess: (updatedCurrency) => {
+      // Invalidate lists and specific detail query
+      queryClient.invalidateQueries({ queryKey: currenciesKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: currenciesKeys.detail(updatedCurrency.id) });
+    },
+  });
 };

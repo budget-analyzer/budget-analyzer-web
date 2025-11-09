@@ -29,10 +29,9 @@ export interface CurrencySeriesCreateRequest {
 
 /**
  * Request to update an existing currency series
- * Currency code is immutable, only providerSeriesId and enabled can be changed
+ * Currency code and providerSeriesId are immutable, only enabled can be changed
  */
 export interface CurrencySeriesUpdateRequest {
-  providerSeriesId: string;
   enabled: boolean;
 }
 

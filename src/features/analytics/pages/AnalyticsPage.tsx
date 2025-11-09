@@ -37,7 +37,6 @@ export function AnalyticsPage() {
 
   // Fetch exchange rates for currency conversion
   const { exchangeRatesMap, isLoading: isExchangeRatesLoading } = useExchangeRatesMap({
-    transactions,
     displayCurrency,
   });
 

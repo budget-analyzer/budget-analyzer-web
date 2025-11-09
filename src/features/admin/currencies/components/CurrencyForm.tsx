@@ -8,10 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select';
-import type { CurrencySeries } from '@/api/currencies';
+import type { CurrencySeriesResponse } from '@/types/currency';
 
 interface CurrencyFormProps {
-  initialData?: CurrencySeries;
+  initialData?: CurrencySeriesResponse;
   onSubmit: (data: { currencyCode: string; providerSeriesId: string; enabled: boolean }) => void;
   isSubmitting: boolean;
   mode: 'create' | 'edit';

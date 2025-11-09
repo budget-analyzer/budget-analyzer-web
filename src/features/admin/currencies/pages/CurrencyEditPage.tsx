@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { MessageBanner } from '@/components/MessageBanner';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CurrencyForm } from '../components/CurrencyForm';
-import { useCurrency, useUpdateCurrency } from '../hooks/useCurrencies';
+import { useCurrency, useUpdateCurrency } from '@/hooks/useCurrencies';
 import { ApiError } from '@/types/apiError';
 
 /**
@@ -31,7 +31,6 @@ export function CurrencyEditPage() {
         {
           id: currencyId,
           data: {
-            providerSeriesId: data.providerSeriesId,
             enabled: data.enabled,
           },
         },
@@ -52,12 +51,7 @@ export function CurrencyEditPage() {
             let message = 'Failed to update currency';
 
             if (error instanceof ApiError) {
-              if (error.response.code === 'INVALID_PROVIDER_SERIES_ID') {
-                message =
-                  'The Provider Series ID is invalid. Please check the FRED documentation for the correct series ID.';
-              } else {
-                message = error.message;
-              }
+              message = error.message;
             }
 
             setErrorMessage(message);

@@ -5,7 +5,6 @@ import {
   CurrencySeriesCreateRequest,
   CurrencySeriesUpdateRequest,
   ExchangeRateResponse,
-  ExchangeRateImportResultResponse,
 } from '@/types/currency';
 
 export const currencyApi = {
@@ -22,31 +21,34 @@ export const currencyApi = {
 
   /**
    * Get currency series by ID
-   * GET /v1/currencies/{id}
+   * GET /v1/admin/currencies/{id}
    */
   getCurrencyById: async (id: number): Promise<CurrencySeriesResponse> => {
-    const response = await apiClient.get<CurrencySeriesResponse>(`/v1/currencies/${id}`);
+    const response = await apiClient.get<CurrencySeriesResponse>(`/v1/admin/currencies/${id}`);
     return response.data;
   },
 
   /**
    * Create a new currency series
-   * POST /v1/currencies
+   * POST /v1/admin/currencies
    */
   createCurrency: async (request: CurrencySeriesCreateRequest): Promise<CurrencySeriesResponse> => {
-    const response = await apiClient.post<CurrencySeriesResponse>('/v1/currencies', request);
+    const response = await apiClient.post<CurrencySeriesResponse>('/v1/admin/currencies', request);
     return response.data;
   },
 
   /**
    * Update an existing currency series
-   * PUT /v1/currencies/{id}
+   * PUT /v1/admin/currencies/{id}
    */
   updateCurrency: async (
     id: number,
     request: CurrencySeriesUpdateRequest,
   ): Promise<CurrencySeriesResponse> => {
-    const response = await apiClient.put<CurrencySeriesResponse>(`/v1/currencies/${id}`, request);
+    const response = await apiClient.put<CurrencySeriesResponse>(
+      `/v1/admin/currencies/${id}`,
+      request,
+    );
     return response.data;
   },
 
@@ -64,18 +66,6 @@ export const currencyApi = {
     const response = await apiClient.get<ExchangeRateResponse[]>('/v1/exchange-rates', {
       params,
     });
-    return response.data;
-  },
-
-  /**
-   * Import latest available rates from FRED
-   * GET /v1/exchange-rates/import
-   * Manually triggers daily cron job
-   */
-  importExchangeRates: async (): Promise<ExchangeRateImportResultResponse> => {
-    const response = await apiClient.get<ExchangeRateImportResultResponse>(
-      '/v1/exchange-rates/import',
-    );
     return response.data;
   },
 };
