@@ -26,8 +26,6 @@ const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
  */
 const currenciesKeys = {
   all: ['currencies'] as const,
-  lists: () => [...currenciesKeys.all, 'list'] as const,
-  list: (enabledOnly: boolean) => [...currenciesKeys.lists(), { enabledOnly }] as const,
   details: () => [...currenciesKeys.all, 'detail'] as const,
   detail: (id: number) => [...currenciesKeys.details(), id] as const,
 };
@@ -271,9 +269,9 @@ export const useCreateCurrency = () => {
       }
       return currencyApi.createCurrency(data);
     },
-    onSuccess: () => {
-      // Invalidate all currency lists to refetch with new data
-      queryClient.invalidateQueries({ queryKey: currenciesKeys.lists() });
+    onSuccess: async () => {
+      // Invalidate all currency queries (both full list and enabled-only)
+      await queryClient.invalidateQueries({ queryKey: currenciesKeys.all });
     },
   });
 };
@@ -314,10 +312,11 @@ export const useUpdateCurrency = () => {
       }
       return currencyApi.updateCurrency(id, data);
     },
-    onSuccess: (updatedCurrency) => {
-      // Invalidate lists and specific detail query
-      queryClient.invalidateQueries({ queryKey: currenciesKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: currenciesKeys.detail(updatedCurrency.id) });
+    onSuccess: async (updatedCurrency) => {
+      // Invalidate all currency queries (both full list and enabled-only)
+      // Await to ensure cache is refreshed before component callbacks run
+      await queryClient.invalidateQueries({ queryKey: currenciesKeys.all });
+      await queryClient.invalidateQueries({ queryKey: currenciesKeys.detail(updatedCurrency.id) });
     },
   });
 };
