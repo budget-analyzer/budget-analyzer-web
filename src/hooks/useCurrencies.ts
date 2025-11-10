@@ -311,10 +311,12 @@ export const useUpdateCurrency = () => {
       }
       return currencyApi.updateCurrency(id, data);
     },
-    onSuccess: async () => {
+    onSuccess: async (updatedCurrency) => {
       // Invalidate all currency queries (both full list and enabled-only)
+      // Also invalidate the specific detail query to ensure fresh data in edit forms
       // Await to ensure cache is refreshed before component callbacks run
       await queryClient.invalidateQueries({ queryKey: currenciesKeys.all });
+      await queryClient.invalidateQueries({ queryKey: currenciesKeys.detail(updatedCurrency.id) });
     },
   });
 };
