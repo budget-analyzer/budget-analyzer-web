@@ -247,6 +247,113 @@ const formattedAmount = formatTransactionAmount(amount, date, currency, displayC
 
 If you find yourself reaching for `useRef` to solve a problem, step back and ask: "What is the actual data flow issue here?" Then fix the root cause.
 
+**useEffect - When and When NOT to Use:**
+
+`useEffect` is ONLY appropriate for **synchronizing with external systems**:
+- ✅ DOM manipulation (body overflow, scroll position, focus management)
+- ✅ Event listener subscriptions (keyboard, mouse, window events) - with cleanup
+- ✅ Timer setup/cleanup (setTimeout, setInterval) - with cleanup
+- ✅ External state synchronization (URL params ↔ Redux, React Router location)
+- ✅ Third-party library initialization (analytics, chat widgets)
+- ✅ Browser API subscriptions (localStorage, WebSocket, IntersectionObserver) - with cleanup
+
+`useEffect` is NEVER appropriate for:
+- ❌ Computing derived state (use `useMemo` or calculate during render)
+- ❌ Event handlers (use inline handlers or `useCallback`)
+- ❌ Transforming data for rendering (do it during render or in `useMemo`)
+- ❌ Initializing state that doesn't depend on external systems (use `useState` initializer or `useMemo`)
+- ❌ Triggering mutations on user actions (use event handlers with mutation callbacks)
+- ❌ State-to-state synchronization (usually indicates derived state or wrong data flow)
+
+**Correct patterns:**
+
+```typescript
+// ✅ CORRECT - Subscribing to external event
+useEffect(() => {
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  };
+
+  document.addEventListener('keydown', handleEscape);
+  return () => document.removeEventListener('keydown', handleEscape);
+}, [setOpen]);
+
+// ✅ CORRECT - Syncing URL params (external) to Redux (internal)
+useEffect(() => {
+  const dateFrom = searchParams.get('dateFrom');
+  const dateTo = searchParams.get('dateTo');
+  dispatch(setDateFilter({ from: dateFrom, to: dateTo }));
+}, [searchParams, dispatch]);
+
+// ✅ CORRECT - DOM side effect
+useEffect(() => {
+  if (isModalOpen) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+  return () => {
+    document.body.style.overflow = '';
+  };
+}, [isModalOpen]);
+```
+
+**Anti-patterns:**
+
+```typescript
+// ❌ WRONG - Derived state (should use useMemo or calculate during render)
+const [filteredData, setFilteredData] = useState(data);
+useEffect(() => {
+  setFilteredData(data.filter(item => item.active));
+}, [data]);
+
+// ✅ CORRECT - Calculate during render
+const filteredData = useMemo(() => data.filter(item => item.active), [data]);
+
+// ❌ WRONG - Event handler in useEffect
+useEffect(() => {
+  if (shouldSubmit) {
+    submitForm();
+    setShouldSubmit(false);
+  }
+}, [shouldSubmit]);
+
+// ✅ CORRECT - Direct event handler
+const handleSubmit = () => {
+  submitForm();
+};
+
+// ❌ WRONG - Effect chain (one effect triggers another)
+useEffect(() => {
+  setStep(2);
+}, [dataLoaded]);
+
+useEffect(() => {
+  fetchNextData();
+}, [step]);
+
+// ✅ CORRECT - Handle in single location
+useEffect(() => {
+  if (dataLoaded) {
+    setStep(2);
+    fetchNextData();
+  }
+}, [dataLoaded]);
+```
+
+**When to question useEffect:**
+
+If your useEffect does any of these, it might be wrong:
+- Sets state based on other state (probably derived state)
+- Has many dependencies that change frequently (probably should be event handler)
+- Runs on every render (missing dependencies or should be during render)
+- Has complex conditional logic (might need to be split or moved)
+- Doesn't have a cleanup function but creates subscriptions (memory leak)
+
+**The golden rule:** If you're not syncing with an external system (DOM, browser API, third-party library, URL, etc.), you probably shouldn't use useEffect.
+
 **Performance - Memoizing Callbacks:**
 
 Always use `useCallback` for functions passed as props to child components to prevent unnecessary re-renders:
