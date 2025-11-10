@@ -1,197 +1,180 @@
-# CLAUDE.md
+# Budget Analyzer Web - React Financial Management Application
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Application Purpose
 
-## Interaction Guidelines
+React 19 web application for managing and analyzing financial transactions.
 
-**IMPORTANT: Always Ask Before Implementing**
+**Type**: Single-page application (SPA)
+**Responsibilities**:
+- Transaction management UI (list, search, import, delete)
+- Multi-bank CSV file upload
+- Date-based filtering and search
+- Light/dark theme support
+- Responsive design (mobile and desktop)
 
-- When the user asks a question or makes an observation (e.g., "looks good, we need to fix X", "is that appropriate?", "do you have suggestions?"), DO NOT immediately start making code changes
-- First, answer the question, provide suggestions, or discuss the approach
-- Wait for explicit confirmation from the user before writing/editing files
-- Only implement changes when the user explicitly says "do it", "implement that", "make those changes", etc.
+## Frontend Architecture
 
-## Project Overview
+### Technology Stack
 
-Budget Analyzer Web is a React 19 application for managing and analyzing financial transactions. Built with TypeScript, Vite, and modern React patterns including React Query for server state and Redux Toolkit for UI state.
-
-### API Contract
-
-**OpenAPI Specification**: [/docs/budget-analyzer-api.yaml](docs/budget-analyzer-api.yaml)
-
-**IMPORTANT**: Always read this file at the start of new conversations to get the current API endpoint definitions, request/response schemas, and error formats. The spec is the source of truth for the Budget Analyzer API contract.
-
-## Development Commands
-
-### Building and Running
-
-- `npm run dev` - Start development server on port 3000 (auto-opens browser)
-- `npm run build` - Type-check with `tsc` then build for production
-- `npm run preview` - Preview production build locally
-
-**IMPORTANT**: NEVER run `npm run dev` automatically. The user will manually start and stop the dev server themselves.
-
-### Code Quality
-
-- `npm run lint:fix` - Auto-fix ESLint issues (ALWAYS use this instead of `npm run lint`)
-- `npm run format` - Format code with Prettier
-
-**IMPORTANT**: Always use `npm run lint:fix` to automatically fix formatting issues. Never run `npm run lint` first - it wastes time showing errors that can be auto-fixed.
-
-**ESLint Rule Exceptions**:
-- **NEVER** disable ESLint rules without asking the user first
-- If you encounter an ESLint rule that seems problematic, explain the issue and ask for permission before adding `eslint-disable` comments
-
-### Testing
-
-- `npm test` - Run tests in watch mode with Vitest
-- `npm run test:ui` - Run tests with Vitest UI interface
-
-**Running a single test file:**
-
+**Discovery:**
 ```bash
-npx vitest src/test/Button.test.tsx
+# View React version
+cat package.json | grep '"react"'
+
+# Check build tool
+cat package.json | grep '"vite"'
+
+# See all dependencies
+cat package.json | jq '.dependencies'
 ```
 
-**Running tests matching a pattern:**
+**Core Technologies:**
+- React 19 with TypeScript
+- Vite (build tool and dev server)
+- TanStack Query (server state management)
+- Redux Toolkit (UI state management)
+- React Router v7 (routing)
+- TanStack Table (data tables)
+- Shadcn/UI + Tailwind CSS (styling)
 
-```bash
-npx vitest --grep "renders correctly"
-```
+### Project Structure
 
-## Architecture
-
-### Folder Structure
-
-This project follows the **Bulletproof React** architecture pattern with **feature-based organization**:
+**Pattern**: Feature-based organization (Bulletproof React)
 
 ```
 src/
-├── features/              # Feature modules (PRIMARY organization)
-│   ├── transactions/      # Transaction management feature
-│   └── analytics/         # Analytics and statistics feature
+├── features/              # Feature modules (PRIMARY)
+│   ├── transactions/      # Transaction feature
+│   │   ├── components/   # Feature-specific components
+│   │   ├── hooks/        # useTransactions, etc.
+│   │   ├── pages/        # Page-level components
+│   │   └── utils/        # Feature utilities
+│   └── analytics/        # Analytics feature (future)
 │
-├── components/            # Shared components across features
-│   └── ui/               # Shadcn/UI primitives
+├── components/           # Shared components
+│   └── ui/              # Shadcn/UI primitives
 │
-├── api/                  # API client, endpoints, and mock data
-├── hooks/                # Shared React hooks
-├── store/                # Redux store (UI state only)
-├── types/                # Shared TypeScript type definitions
-├── utils/                # Generic utility functions
-├── lib/                  # Third-party library configurations
-├── mocks/                # MSW handlers for testing
-└── test/                 # Test setup and utilities
+├── api/                 # API client and endpoints
+├── hooks/               # Shared hooks
+├── store/               # Redux store (UI state)
+├── types/               # TypeScript types
+├── utils/               # Generic utilities
+├── lib/                 # Third-party configs
+├── mocks/               # MSW handlers
+└── test/                # Test setup
 ```
 
 **Key Principles:**
-
-- **features/ is PRIMARY** - Most code lives in feature folders organized by business capability
-- **Feature structure** - Each feature contains: `components/`, `hooks/`, `pages/`, `utils/`
-- **lib/ = Third-party configs** - NOT your own utilities or domain logic (e.g., Framer Motion presets)
-- **utils/ = Your utilities** - Generic helpers used across features (e.g., `cn()` for Tailwind)
+- **features/ is primary** - Most code lives in feature folders
 - **Feature isolation** - Features don't import from other features
-- **Shared stays flat** - Truly shared components/hooks at top level, not deeply nested
-- **Co-locate** - Everything related to a feature lives in its folder
+- **Shared stays flat** - Truly shared items at top level
+- **Co-location** - Everything related to feature in its folder
+
+See [CLAUDE.md:64-95](CLAUDE.md#L64-L95) for complete structure details.
 
 ### State Management Strategy
 
-This app uses a **dual state management** approach:
+**Dual state approach** - Different tools for different state types:
 
-- **React Query (`@tanstack/react-query`)** - All server/async state (transactions data, API calls, caching, loading states)
-  - Query keys: `['transactions']` for list, `['transaction', id]` for single item
-  - 5-minute stale time, 1 retry on failure
-  - Configured in `src/features/transactions/hooks/useTransactions.ts`
+**1. React Query (`@tanstack/react-query`)** - Server/async state:
+- Transaction data, API calls
+- Automatic caching (5-minute stale time)
+- Loading/error states
+- Query keys: `['transactions']` for list, `['transaction', id]` for single
 
-- **Redux Toolkit** - Client-only UI state (theme, search query, selected items)
-  - Single slice: `src/store/uiSlice.ts`
-  - Persists theme to localStorage
-  - Use typed hooks from `src/store/hooks.ts`
+**2. Redux Toolkit** - Client-only UI state:
+- Theme (light/dark) with localStorage persistence
+- Search query
+- Selected items
+- Single slice: `src/store/uiSlice.ts`
 
-### API Layer Architecture
+**Discovery:**
+```bash
+# Find React Query hooks
+cat src/features/transactions/hooks/useTransactions.ts
 
-**Three-mode API system** for flexibility during development:
+# View Redux slice
+cat src/store/uiSlice.ts
 
-1. **Mock Data Mode** (default) - Uses static mock data from `src/api/mockData.ts`
-2. **MSW Mode** (tests) - Uses Mock Service Worker handlers in `src/mocks/`
-3. **Real API Mode** - Connects to actual backend
-
-Toggle via environment variable `VITE_USE_MOCK_DATA`:
-
-- `true` - Uses mock data with simulated delays
-- `false` or unset - Makes real API calls via axios client
-
-**API Client (`src/api/client.ts`):**
-
-- Axios instance with 10s timeout
-- Request interceptor for future auth token injection
-- Response interceptor that transforms all errors into `ApiError` class with standardized error responses
-- Base URL configured via `VITE_API_BASE_URL` env var
-
-**Development Proxy:**
-Vite dev server proxies `/api` → `http://localhost:8080/budget-analyzer-api` (see `vite.config.ts:14-23`)
-
-### Path Aliases
-
-Use `@/*` for imports instead of relative paths:
-
-```typescript
-import { Transaction } from '@/types/transaction';
-import { apiClient } from '@/api/client';
+# Check typed hooks
+cat src/store/hooks.ts
 ```
 
-Configured in:
+### API Layer
 
-- `tsconfig.json` - TypeScript resolution
-- `vite.config.ts` - Vite bundling
-- `vitest.config.ts` - Test resolution
+**Three-mode system** for development flexibility:
 
-### Component Architecture
+1. **Mock Data Mode** (default) - Static mocks from `src/api/mockData.ts`
+2. **MSW Mode** (tests) - Mock Service Worker handlers
+3. **Real API Mode** - Actual backend via axios
 
-**CRITICAL - Separation of Concerns**: Components are ONLY for presentation and UI logic. Never put async/await, API calls, or business logic directly in components.
+**Toggle:** `VITE_USE_MOCK_DATA` environment variable
 
-**Correct patterns:**
+**API Client (`src/api/client.ts`):**
+- Axios instance with 10s timeout
+- Request interceptor for auth tokens (future)
+- Response interceptor normalizes all errors to `ApiError` class
+- Base URL: `VITE_API_BASE_URL` (dev default: `/api`)
 
-- ✅ Use React Query hooks (`useQuery`, `useMutation`) in custom hooks (e.g., `src/features/transactions/hooks/useTransactions.ts`)
-- ✅ Call mutations using the `mutate` function with callbacks: `mutate(data, { onSuccess, onError })`
-- ✅ Keep components synchronous and declarative
-- ✅ Use `isPending`, `isLoading`, `isError` states from hooks for UI feedback
-- ✅ Memoize callback functions passed to child components using `useCallback`
-
-**Anti-patterns to AVOID:**
-
-- ❌ `async` functions in components
-- ❌ `await` in component code
-- ❌ Direct API calls in components (e.g., `await apiClient.post()`)
-- ❌ `mutateAsync` with try/catch blocks in components
-- ❌ Complex business logic in components
-- ❌ Inline function definitions in JSX props (use `useCallback` instead)
-- ❌ IIFEs (Immediately Invoked Function Expressions) in JSX
-- ❌ Multi-line logic or calculations directly in JSX expressions
-- ❌ Complex inline handlers (more than 1-2 lines) - extract to custom hooks or separate components
-- ❌ `useRef` to work around data flow issues - indicates a design problem that needs proper fixing
-
-**Example of correct pattern:**
-
+**Development Proxy:**
 ```typescript
-// ✅ CORRECT - Component uses mutation with callbacks
-const { mutate: deleteItem, isPending } = useDeleteItem();
+// vite.config.ts
+proxy: {
+  '/api': {
+    target: 'http://localhost:8080',
+    changeOrigin: true,
+  },
+}
+```
 
-const handleDelete = () => {
+Frontend calls `/api/v1/transactions` → Vite proxies to `http://localhost:8080/api/v1/transactions` → NGINX gateway
+
+See [vite.config.ts:14-23](vite.config.ts#L14-L23)
+
+## Component Architecture Patterns
+
+### CRITICAL: Separation of Concerns
+
+**Components are ONLY for presentation and UI logic.**
+
+**✅ Correct Patterns:**
+- Use React Query hooks in custom hooks (`useTransactions`, `useDeleteTransaction`)
+- Call mutations with `mutate(data, { onSuccess, onError })`
+- Keep components synchronous and declarative
+- Use `isPending`, `isLoading`, `isError` from hooks
+- Memoize callbacks with `useCallback`
+
+**❌ Anti-Patterns to AVOID:**
+- `async` functions in components
+- `await` in component code
+- Direct API calls in components
+- `mutateAsync` with try/catch in components
+- Complex business logic in components
+- Inline function definitions in JSX props
+- IIFEs (Immediately Invoked Function Expressions) in JSX
+- Multi-line logic directly in JSX expressions
+
+**Example - Correct:**
+```typescript
+// ✅ Component uses mutation with callbacks
+const { mutate: deleteItem, isPending } = useDeleteTransaction();
+
+const handleDelete = useCallback(() => {
   deleteItem(id, {
     onSuccess: () => toast.success('Deleted'),
     onError: (error) => toast.error(error.message),
   });
-};
+}, [id, deleteItem]);
+
+return <Button onClick={handleDelete} disabled={isPending}>Delete</Button>;
 ```
 
-**Example of anti-pattern:**
-
+**Example - Wrong:**
 ```typescript
-// ❌ WRONG - async/await in component
+// ❌ async/await in component
 const handleDelete = async () => {
   try {
-    await deleteItem.mutateAsync(id);
+    await deleteTransaction.mutateAsync(id);
     toast.success('Deleted');
   } catch (error) {
     toast.error(error.message);
@@ -199,168 +182,34 @@ const handleDelete = async () => {
 };
 ```
 
-**Avoiding Complex Logic in JSX:**
+### useEffect - When to Use
 
-Never use IIFEs or multi-line logic directly in JSX. Extract to components, hooks, or utilities:
-
-```typescript
-// ❌ WRONG - IIFE with complex logic in JSX
-<span>
-  {(() => {
-    const convertedAmount = convertCurrency(amount, date, currency, displayCurrency, ratesMap);
-    const needsOriginal = currency !== displayCurrency;
-    return (
-      <>
-        {formatCurrency(convertedAmount, displayCurrency)}
-        {needsOriginal && <span>({formatCurrency(amount, currency)})</span>}
-      </>
-    );
-  })()}
-</span>
-
-// ✅ CORRECT - Extract to a component
-<TransactionAmount
-  amount={amount}
-  date={date}
-  currency={currency}
-  displayCurrency={displayCurrency}
-  ratesMap={ratesMap}
-/>
-
-// ✅ ALSO CORRECT - Extract to a utility function
-const formattedAmount = formatTransactionAmount(amount, date, currency, displayCurrency, ratesMap);
-<span>{formattedAmount.primary} {formattedAmount.original && `(${formattedAmount.original})`}</span>
-```
-
-**useRef - When and When NOT to Use:**
-
-`useRef` is ONLY appropriate for:
-- ✅ Accessing DOM elements (e.g., `inputRef.current.focus()`)
-- ✅ Storing mutable values that don't trigger re-renders (timers, animation IDs, previous values)
-- ✅ Integrating with third-party imperative APIs
-
-`useRef` is NEVER appropriate for:
-- ❌ Working around state synchronization issues
-- ❌ Caching derived data (use `useMemo` instead)
-- ❌ Storing props or state snapshots to "fix" stale closures
-- ❌ Bypassing React's normal data flow
-
-If you find yourself reaching for `useRef` to solve a problem, step back and ask: "What is the actual data flow issue here?" Then fix the root cause.
-
-**useEffect - When and When NOT to Use:**
-
-`useEffect` is ONLY appropriate for **synchronizing with external systems**:
-- ✅ DOM manipulation (body overflow, scroll position, focus management)
-- ✅ Event listener subscriptions (keyboard, mouse, window events) - with cleanup
+**ONLY for synchronizing with external systems:**
+- ✅ DOM manipulation (body overflow, scroll, focus)
+- ✅ Event listener subscriptions (keyboard, mouse) - with cleanup
 - ✅ Timer setup/cleanup (setTimeout, setInterval) - with cleanup
-- ✅ External state synchronization (URL params ↔ Redux, React Router location)
+- ✅ External state sync (URL params ↔ Redux)
 - ✅ Third-party library initialization (analytics, chat widgets)
-- ✅ Browser API subscriptions (localStorage, WebSocket, IntersectionObserver) - with cleanup
+- ✅ Browser API subscriptions (localStorage, WebSocket) - with cleanup
 
-`useEffect` is NEVER appropriate for:
+**NEVER for:**
 - ❌ Computing derived state (use `useMemo` or calculate during render)
 - ❌ Event handlers (use inline handlers or `useCallback`)
-- ❌ Transforming data for rendering (do it during render or in `useMemo`)
-- ❌ Initializing state that doesn't depend on external systems (use `useState` initializer or `useMemo`)
-- ❌ Triggering mutations on user actions (use event handlers with mutation callbacks)
-- ❌ State-to-state synchronization (usually indicates derived state or wrong data flow)
+- ❌ Transforming data for rendering (do during render or in `useMemo`)
+- ❌ State initialization (use `useState` initializer or `useMemo`)
+- ❌ Triggering mutations on user actions (use event handlers)
 
-**Correct patterns:**
+**Golden rule:** If you're not syncing with an external system (DOM, browser API, third-party library, URL), you probably shouldn't use `useEffect`.
 
-```typescript
-// ✅ CORRECT - Subscribing to external event
-useEffect(() => {
-  const handleEscape = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setOpen(false);
-    }
-  };
+See [CLAUDE.md:250-354](CLAUDE.md#L250-L354) for complete useEffect guidelines.
 
-  document.addEventListener('keydown', handleEscape);
-  return () => document.removeEventListener('keydown', handleEscape);
-}, [setOpen]);
+### Performance - Memoization
 
-// ✅ CORRECT - Syncing URL params (external) to Redux (internal)
-useEffect(() => {
-  const dateFrom = searchParams.get('dateFrom');
-  const dateTo = searchParams.get('dateTo');
-  dispatch(setDateFilter({ from: dateFrom, to: dateTo }));
-}, [searchParams, dispatch]);
-
-// ✅ CORRECT - DOM side effect
-useEffect(() => {
-  if (isModalOpen) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = '';
-  }
-  return () => {
-    document.body.style.overflow = '';
-  };
-}, [isModalOpen]);
-```
-
-**Anti-patterns:**
+Always use `useCallback` for functions passed as props:
 
 ```typescript
-// ❌ WRONG - Derived state (should use useMemo or calculate during render)
-const [filteredData, setFilteredData] = useState(data);
-useEffect(() => {
-  setFilteredData(data.filter(item => item.active));
-}, [data]);
-
-// ✅ CORRECT - Calculate during render
-const filteredData = useMemo(() => data.filter(item => item.active), [data]);
-
-// ❌ WRONG - Event handler in useEffect
-useEffect(() => {
-  if (shouldSubmit) {
-    submitForm();
-    setShouldSubmit(false);
-  }
-}, [shouldSubmit]);
-
-// ✅ CORRECT - Direct event handler
-const handleSubmit = () => {
-  submitForm();
-};
-
-// ❌ WRONG - Effect chain (one effect triggers another)
-useEffect(() => {
-  setStep(2);
-}, [dataLoaded]);
-
-useEffect(() => {
-  fetchNextData();
-}, [step]);
-
-// ✅ CORRECT - Handle in single location
-useEffect(() => {
-  if (dataLoaded) {
-    setStep(2);
-    fetchNextData();
-  }
-}, [dataLoaded]);
-```
-
-**When to question useEffect:**
-
-If your useEffect does any of these, it might be wrong:
-- Sets state based on other state (probably derived state)
-- Has many dependencies that change frequently (probably should be event handler)
-- Runs on every render (missing dependencies or should be during render)
-- Has complex conditional logic (might need to be split or moved)
-- Doesn't have a cleanup function but creates subscriptions (memory leak)
-
-**The golden rule:** If you're not syncing with an external system (DOM, browser API, third-party library, URL, etc.), you probably shouldn't use useEffect.
-
-**Performance - Memoizing Callbacks:**
-
-Always use `useCallback` for functions passed as props to child components to prevent unnecessary re-renders:
-
-```typescript
-// ✅ CORRECT - Memoized callback
-const handleDateFilterChange = useCallback(
+// ✅ Memoized callback
+const handleChange = useCallback(
   (from: string | null, to: string | null) => {
     const params = new URLSearchParams();
     if (from && to) {
@@ -372,164 +221,203 @@ const handleDateFilterChange = useCallback(
   [setSearchParams],
 );
 
-<ChildComponent onChange={handleDateFilterChange} />
+<ChildComponent onChange={handleChange} />
 ```
 
-```typescript
-// ❌ WRONG - Inline function (creates new instance every render)
-<ChildComponent
-  onChange={(from, to) => {
-    const params = new URLSearchParams();
-    if (from && to) {
-      params.set('dateFrom', from);
-      params.set('dateTo', to);
-    }
-    setSearchParams(params);
-  }}
-/>
+## UI Patterns
+
+### Shadcn/UI Components
+
+Components in `src/components/ui/` are **copy-pasted primitives** (not npm packages):
+- Fully owned and customizable
+- Built with Tailwind CSS
+- Use `cn()` utility for conditional class merging
+
+**Discovery:**
+```bash
+# Find all UI components
+ls src/components/ui/
+
+# View cn utility
+cat src/utils/cn.ts
 ```
 
-**Shadcn/UI Pattern**: Components in `src/components/ui/` are copy-pasted primitives (not npm packages). They are fully owned and customizable. Built with Tailwind CSS using the `cn()` utility from `src/utils/cn.ts` for conditional class merging.
+### TanStack Table
 
-**Table Implementation**: Uses TanStack Table (v8) in headless mode. See `src/features/transactions/components/TransactionTable.tsx` for column definitions, sorting, filtering, and pagination.
+**Pattern**: Headless table library (v8) for data tables
 
-**Form Validation**:
+**Discovery:**
+```bash
+# View table implementation
+cat src/features/transactions/components/TransactionTable.tsx
+```
 
-- **CRITICAL**: All form field validation (maxLength, pattern, minLength, etc.) MUST match the constraints defined in the OpenAPI spec
-- When creating or editing forms, always check [docs/budget-analyzer-api.yaml](docs/budget-analyzer-api.yaml) for the corresponding request schema
-- Apply HTML5 validation attributes (`maxLength`, `minLength`, `pattern`, `required`) to input fields to match API constraints
-- This provides better UX by preventing validation errors before they reach the backend
-- Example: If the API schema specifies `maxLength: 100` for a field, add `maxLength={100}` to the corresponding `<Input>` component
+Features:
+- Column definitions with sorting
+- Filtering
+- Pagination
+- Selection
 
-**Error Handling**:
+### Form Validation
 
-- `ErrorBoundary.tsx` - React error boundary for component crashes
-- `ErrorBanner.tsx` - Displays API errors with retry functionality
-- All API errors are normalized through the `ApiError` class
-- **CRITICAL**: [src/utils/errorMessages.ts](src/utils/errorMessages.ts) maps 422 error codes to user-friendly messages
-  - Error codes are defined in the OpenAPI spec (see `docs/budget-analyzer-api.yaml` for all 422 examples)
-  - **ALWAYS** keep `errorMessages.ts` in sync with the API spec's error codes
-  - When adding/updating API endpoints, check the spec's 422 response examples and update the error message mappings
-  - Error messages should be concise (no periods) to match the API's message format and toast/banner conventions
-  - **Use `formatApiError(error, defaultMessage)` in mutation `onError` callbacks** - This centralizes error formatting logic and handles 422 code mapping automatically
+**CRITICAL**: All form field validation MUST match OpenAPI spec constraints.
 
-**Animation Configuration**:
+**Pattern:**
+1. Check API schema in [docs/budget-analyzer-api.yaml](docs/budget-analyzer-api.yaml)
+2. Apply HTML5 validation attributes to inputs:
+   - `maxLength`, `minLength`, `pattern`, `required`
+3. Provides better UX (prevents errors before backend)
 
-- **CRITICAL**: All Framer Motion animation props (variants, transitions, durations, easing) MUST be defined in [src/lib/animations.ts](src/lib/animations.ts)
-- **NEVER** inline animation values in components (e.g., `duration: 0.3`, `ease: "easeInOut"`, or inline variant objects)
-- Components should only import and use the exported constants from `animations.ts`
-- This ensures consistency across the app and makes animation timing/easing changes easy to manage centrally
+**Example:**
+```typescript
+// If API schema specifies maxLength: 100
+<Input maxLength={100} required />
+```
 
-**Correct pattern:**
+### Error Handling
+
+**Components:**
+- `ErrorBoundary.tsx` - React error boundary for crashes
+- `ErrorBanner.tsx` - Displays API errors with retry
+
+**API Error Mapping:**
+- All API errors normalized through `ApiError` class
+- **[src/utils/errorMessages.ts](src/utils/errorMessages.ts)** maps 422 error codes to user-friendly messages
+- **ALWAYS** keep `errorMessages.ts` in sync with OpenAPI spec's 422 examples
+- Use `formatApiError(error, defaultMessage)` in mutation `onError` callbacks
+
+**Discovery:**
+```bash
+# View error message mappings
+cat src/utils/errorMessages.ts
+
+# Check OpenAPI error codes
+cat docs/budget-analyzer-api.yaml | grep -A 10 "422"
+```
+
+### Animation Configuration
+
+**CRITICAL**: All Framer Motion props MUST be defined in [src/lib/animations.ts](src/lib/animations.ts)
+
+**Pattern:**
+- ✅ Import animation constants from `animations.ts`
+- ❌ NEVER inline animation values in components
 
 ```typescript
-// ✅ CORRECT - Import animation config
+// ✅ CORRECT
 import { fadeVariants, fadeTransition } from '@/lib/animations';
-
 <motion.div variants={fadeVariants} transition={fadeTransition}>
-  {content}
-</motion.div>
-```
 
-**Anti-pattern:**
-
-```typescript
-// ❌ WRONG - Inline animation values
+// ❌ WRONG
 <motion.div
   initial={{ opacity: 0 }}
   animate={{ opacity: 1 }}
-  transition={{ duration: 0.3, ease: 'easeInOut' }}
+  transition={{ duration: 0.3 }}
 >
-  {content}
-</motion.div>
 ```
 
-**Date Handling**:
+### Date Handling
 
-- **CRITICAL**: [src/utils/dates.ts](src/features/transactions/utils/dates.ts) is the ONLY place in the codebase where date operations are allowed
-- **NEVER** import from `date-fns` outside of `dates.ts`
-- **NEVER** use `new Date()` constructor outside of `dates.ts`
-- **NEVER** perform date parsing, formatting, or manipulation outside of `dates.ts`
-- All date operations must go through the centralized utilities to avoid timezone bugs
+**CRITICAL**: [src/utils/dates.ts](src/utils/dates.ts) is the ONLY place for date operations.
 
-**Date Format Types**:
-- **LocalDate (YYYY-MM-DD)**: Transaction dates, date filters - NO timezone info (e.g., `"2025-07-01"`)
-- **ISO 8601 (with timezone)**: Timestamps like createdAt, updatedAt - HAS timezone info (e.g., `"2025-07-01T12:34:56Z"`)
+**Rules:**
+- ❌ NEVER import `date-fns` outside of `dates.ts`
+- ❌ NEVER use `new Date()` constructor outside of `dates.ts`
+- ❌ NEVER perform date parsing/formatting outside of `dates.ts`
 
-**Correct pattern:**
+**Date Format Types:**
+- **LocalDate (YYYY-MM-DD)**: Transaction dates, filters - NO timezone (e.g., `"2025-07-01"`)
+- **ISO 8601 (with timezone)**: Timestamps (createdAt, updatedAt) - HAS timezone (e.g., `"2025-07-01T12:34:56Z"`)
 
+**Pattern:**
 ```typescript
-// ✅ CORRECT - Import from dates utility
+// ✅ CORRECT
 import { formatLocalDate, parseLocalDate, formatTimestamp } from '@/utils/dates';
 
-// Format a LocalDate (YYYY-MM-DD) for display
 const displayDate = formatLocalDate(transaction.date);
-
-// Format an ISO timestamp for display
 const displayTimestamp = formatTimestamp(transaction.createdAt);
 
-// Parse a LocalDate for comparisons
-const dateObj = parseLocalDate(transaction.date);
-```
-
-**Anti-patterns:**
-
-```typescript
-// ❌ WRONG - Importing date-fns directly
-import { format, parseISO } from 'date-fns';
-
-// ❌ WRONG - Using Date constructor with string
-const date = new Date('2025-07-01'); // Creates UTC date, causes off-by-one day bugs!
-
-// ❌ WRONG - Date manipulation in component
-const formatted = transaction.date.split('-').join('/');
+// ❌ WRONG
+import { format } from 'date-fns';
+const date = new Date('2025-07-01');  // Timezone bug!
 ```
 
 ### UI/UX Principles
 
-**No Tooltips**:
-
-- **NEVER** use tooltips or hover states to display information
+**No Tooltips:**
+- ❌ NEVER use tooltips or hover states for information
 - Tooltips don't work on mobile/touch devices
-- All information must be visible inline by default
+- All information must be visible inline
+
+## Path Aliases
+
+Use `@/*` for imports instead of relative paths:
+
+```typescript
+import { Transaction } from '@/types/transaction';
+import { apiClient } from '@/api/client';
+```
+
+Configured in:
+- `tsconfig.json` - TypeScript resolution
+- `vite.config.ts` - Vite bundling
+- `vitest.config.ts` - Test resolution
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm 9+
+
+### Commands
+
+**Build and Run:**
+```bash
+npm install          # Install dependencies
+npm run dev          # Start dev server (port 3000)
+npm run build        # Type-check + build for production
+npm run preview      # Preview production build
+```
+
+**IMPORTANT**: NEVER run `npm run dev` automatically. User controls dev server.
+
+**Code Quality:**
+```bash
+npm run lint:fix     # Auto-fix ESLint issues (ALWAYS use this)
+npm run format       # Format with Prettier
+```
+
+**IMPORTANT**: Always use `npm run lint:fix` to auto-fix. Don't run `npm run lint` first - wastes time.
+
+**Testing:**
+```bash
+npm test             # Run tests in watch mode
+npm run test:ui      # Run tests with Vitest UI
+
+# Single test file
+npx vitest src/test/Button.test.tsx
+
+# Test pattern
+npx vitest --grep "renders correctly"
+```
 
 ### Testing Setup
 
-**Vitest configuration** (`vitest.config.ts`):
+**Vitest** with jsdom environment:
+- Setup: `src/test/setup.ts` (MSW server, jest-dom matchers)
+- MSW handlers: `src/mocks/handlers.ts`
+- Server: `src/mocks/server.ts`
 
-- jsdom environment for React component testing
-- Setup file: `src/test/setup.ts` (configures MSW server and jest-dom matchers)
-- Path aliases resolved
-- CSS processing enabled
+### Environment Variables
 
-**MSW (Mock Service Worker):**
-
-- Handlers: `src/mocks/handlers.ts`
-- Server setup: `src/mocks/server.ts`
-- Started in `beforeAll`, reset in `afterEach`, closed in `afterAll`
-
-## Code Style
-
-- **ESLint**: Flat config (ESLint 9) in `eslint.config.js`
-  - TypeScript strict mode enabled
-  - React 19 (no need for `React` imports in JSX)
-  - Unused vars error (except `_` prefix for intentionally unused params)
-  - Prettier integration (rules conflicts resolved)
-
-- **Prettier**: See `.prettierrc` for formatting rules
-  - 100 char line width
-  - Single quotes for JS/TS, double quotes for JSX
-  - Semicolons, trailing commas
-
-## Environment Variables
-
-Required variables (see `.env.example`):
+Required (see `.env.example`):
 
 - `VITE_API_BASE_URL` - API endpoint
   - Dev default: `/api` (proxied to localhost:8080)
   - Production: Full URL like `https://api.bleurubin.com`
 
-- `VITE_USE_MOCK_DATA` - Enable mock data mode
+- `VITE_USE_MOCK_DATA` - Enable mock data
   - `true` - Use static mocks
   - `false` - Make real API calls
 
@@ -537,39 +425,115 @@ Required variables (see `.env.example`):
 
 ### Architecture Principles
 
-- **Production Parity**: All development configurations should work identically in production. Avoid dev-only hacks or workarounds.
-- **Explicit over Clever**: Prefer verbose, clear code over "clever" solutions that are hard to understand or maintain.
-- **Question Complexity**: If a solution requires unusual workarounds (DNS resolvers, custom builds, non-standard patterns), challenge whether it's the right approach.
-- **No Magic**: Avoid configurations that require "magic" environment-specific settings (special DNS servers, undocumented assumptions, etc.).
+- **Production Parity**: Dev configs work identically in production
+- **Explicit over Clever**: Prefer verbose, clear code
+- **Question Complexity**: Challenge solutions requiring unusual workarounds
+- **No Magic**: Avoid environment-specific "magic" settings
 
 ### When Suggesting Solutions
 
-**IMPORTANT**: When proposing technical solutions, especially for infrastructure/configuration:
-
-1. **Explain tradeoffs** - Don't just provide a solution, explain pros/cons
+1. **Explain tradeoffs** - Don't just provide solution, explain pros/cons
 2. **Flag code smells** - If something feels hacky, say so upfront
-3. **Offer alternatives** - Present multiple approaches (simple vs. complex)
-4. **Production implications** - Explicitly state if something won't work the same in production
-5. **Ask for feedback** - When there are multiple valid approaches, ask which the user prefers
+3. **Offer alternatives** - Present multiple approaches
+4. **Production implications** - State if something won't work same in production
+5. **Ask for feedback** - When multiple valid approaches exist
 
 ### Red Flags to Avoid
 
-- ❌ Solutions that require DNS resolvers for internal routing
-- ❌ Configurations that only work in Docker/dev but not production
+- ❌ Solutions requiring DNS resolvers for internal routing
+- ❌ Configs that only work in Docker/dev but not production
 - ❌ "Magic" environment variables or undocumented dependencies
-- ❌ Workarounds that add fragility (race conditions, timing dependencies)
-- ❌ Performance penalties hidden by "it works" (unnecessary DNS lookups, extra network hops)
+- ❌ Workarounds with race conditions or timing dependencies
+- ❌ Hidden performance penalties
 
 ### When in Doubt
 
-If a solution requires more than 2 lines of explanation for "why this works", it's probably too complex. Step back and find a simpler approach.
+If solution requires >2 lines of explanation for "why this works", it's too complex. Find simpler approach.
 
-## Important Implementation Notes
+## Code Style
 
-**Theme Persistence**: Theme state lives in Redux but is synced to localStorage and DOM class (`dark`) via the `uiSlice` reducers. On initial load, theme is read from localStorage (see `src/store/uiSlice.ts:11`).
+**ESLint**: Flat config (ESLint 9) in `eslint.config.js`
+- TypeScript strict mode
+- React 19 (no `React` imports in JSX)
+- Unused vars error (except `_` prefix)
 
-**Transaction Type System**: All transaction types are defined in `src/types/transaction.ts`. The API returns standardized error responses with type, message, code, and fieldErrors fields (type defined in `src/types/apiError.ts`).
+**Prettier**: See `.prettierrc`
+- 100 char line width
+- Single quotes (JS/TS), double quotes (JSX)
+- Semicolons, trailing commas
 
-**Date Handling**: All date operations are centralized in [src/utils/dates.ts](src/features/transactions/utils/dates.ts). This module is the ONLY place that imports `date-fns` or uses the `Date` constructor. Use functions like `formatLocalDate()`, `parseLocalDate()`, `formatTimestamp()`, etc. Never import `date-fns` directly or manipulate dates outside of `dates.ts`.
+## Important Notes
 
-**Routing**: React Router v7 with data router pattern. Routes defined in `src/App.tsx`. Use `useNavigate()` for programmatic navigation, `<Link>` for declarative navigation.
+**Theme Persistence**: Redux stores theme, syncs to localStorage and DOM class (`dark`)
+
+**Transaction Types**: Defined in `src/types/transaction.ts`
+
+**API Error Types**: Defined in `src/types/apiError.ts`
+
+**Routing**: React Router v7 with data router pattern (routes in `src/App.tsx`)
+
+## Discovery Commands
+
+```bash
+# View package scripts
+cat package.json | jq '.scripts'
+
+# Find all React components
+find src -name "*.tsx" | grep -v test
+
+# Find API endpoints
+cat src/api/endpoints.ts
+
+# View API client config
+cat src/api/client.ts
+
+# Check React Query hooks
+find src -name "use*.ts" | grep -v test
+
+# View Redux store
+cat src/store/uiSlice.ts
+```
+
+## AI Assistant Guidelines
+
+When working on this application:
+
+### Critical Rules
+
+1. **NEVER implement changes without explicit permission** - Always present a plan and wait for approval
+2. **Distinguish between statements and requests** - "I did X" is informational, not a request
+3. **Questions deserve answers first** - Provide information before implementing
+4. **Wait for explicit action language** - Only implement when user says "do it", "implement", etc.
+5. **Don't auto-start dev server** - User controls `npm run dev` manually
+
+### ESLint Rules
+
+- **NEVER disable ESLint rules without asking** first
+- If rule seems problematic, explain issue and ask permission before adding `eslint-disable` comments
+
+### Component Patterns
+
+- **NO async/await in components** - Use React Query hooks with callbacks
+- **Memoize callbacks** - Always use `useCallback` for props
+- **NO IIFEs in JSX** - Extract to components or utilities
+- **Question useRef** - If not DOM/imperative API, there's probably a better way
+- **useEffect only for external systems** - Not for derived state or event handlers
+
+### Configuration Files
+
+- **Animations**: Only define in `src/lib/animations.ts`
+- **Dates**: Only import from `src/utils/dates.ts`
+- **Error messages**: Keep `errorMessages.ts` synced with OpenAPI spec
+
+### Documentation
+
+- **Update CLAUDE.md** when architecture changes
+- **Check OpenAPI spec** before creating/editing forms
+- **Sync error codes** when API changes
+- **Document complex patterns** in comments
+
+### Testing
+
+- Write tests for new features
+- Use MSW for API mocking
+- Keep tests co-located with components
