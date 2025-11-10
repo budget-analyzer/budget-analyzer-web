@@ -80,7 +80,6 @@ interface DialogContentProps {
 
 export function DialogContent({ children, className, showClose = true }: DialogContentProps) {
   const { open, setOpen } = useDialog();
-  const contentRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -108,7 +107,6 @@ export function DialogContent({ children, className, showClose = true }: DialogC
 
       {/* Content */}
       <div
-        ref={contentRef}
         className={cn(
           'relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg',
           'animate-in fade-in-0 zoom-in-95',
