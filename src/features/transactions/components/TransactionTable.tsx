@@ -44,6 +44,7 @@ import {
 import { useUpdateTransaction } from '@/hooks/useTransactions';
 import { formatApiError } from '@/utils/errorMessages';
 import { toast } from 'sonner';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -75,18 +76,17 @@ export function TransactionTable({
   const navigate = useNavigate();
   const { mutate: updateTransaction, isPending: isUpdating } = useUpdateTransaction();
 
-  // Debounce search input: update Redux state 400ms after user stops typing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      dispatch(setTransactionTableGlobalFilter(localSearchValue));
-      // Update URL for bookmarkability (if callback provided)
-      if (onSearchChange) {
-        onSearchChange(localSearchValue);
-      }
-    }, 400);
+  // Debounce the search value: only updates 400ms after user stops typing
+  const debouncedSearchValue = useDebounce(localSearchValue, 400);
 
-    return () => clearTimeout(timeoutId);
-  }, [localSearchValue, dispatch, onSearchChange]);
+  // Update Redux and URL when debounced search value changes
+  useEffect(() => {
+    dispatch(setTransactionTableGlobalFilter(debouncedSearchValue));
+    // Update URL for bookmarkability (if callback provided)
+    if (onSearchChange) {
+      onSearchChange(debouncedSearchValue);
+    }
+  }, [debouncedSearchValue, dispatch, onSearchChange]);
 
   // Sync local state when Redux state changes externally (e.g., clear filters button)
   useEffect(() => {
