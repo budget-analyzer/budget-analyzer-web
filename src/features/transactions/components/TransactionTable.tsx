@@ -20,12 +20,9 @@ import {
 } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { DeleteTransactionModal } from '@/features/transactions/components/DeleteTransactionModal';
-import { TransactionAmountBadge } from '@/features/transactions/components/TransactionAmountBadge';
 import { EditableTransactionRow } from '@/features/transactions/components/EditableTransactionRow';
-import { formatLocalDate, compareDates } from '@/utils/dates';
+import { compareDates } from '@/utils/dates';
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -128,7 +125,9 @@ export function TransactionTable({
     [navigate],
   );
 
-  // Define columns using TanStack Table
+  // Define columns for TanStack Table
+  // Note: Cell rendering is handled by EditableTransactionRow, not by these column definitions
+  // These columns are only used for: headers, sorting configuration, and column count
   const columns = useMemo<ColumnDef<Transaction>[]>(
     () => [
       {
@@ -145,7 +144,6 @@ export function TransactionTable({
             </Button>
           );
         },
-        cell: ({ row }) => formatLocalDate(row.getValue('date')),
         sortingFn: (rowA, rowB) => {
           return compareDates(rowA.getValue('date') as string, rowB.getValue('date') as string);
         },
@@ -165,11 +163,6 @@ export function TransactionTable({
       {
         accessorKey: 'type',
         header: 'Type',
-        cell: ({ row }) => (
-          <Badge variant={row.getValue('type') === 'CREDIT' ? 'success' : 'secondary'}>
-            {row.getValue('type')}
-          </Badge>
-        ),
       },
       {
         accessorKey: 'amount',
@@ -185,34 +178,13 @@ export function TransactionTable({
             </Button>
           );
         },
-        cell: ({ row }) => {
-          // Show skeleton while exchange rates are loading
-          if (isExchangeRatesLoading) {
-            return (
-              <div className="flex items-center justify-end gap-2">
-                <Skeleton className="h-5 w-24" />
-              </div>
-            );
-          }
-
-          return (
-            <TransactionAmountBadge
-              amount={row.getValue('amount') as number}
-              date={row.original.date}
-              currencyCode={row.original.currencyIsoCode}
-              displayCurrency={displayCurrency}
-              exchangeRatesMap={exchangeRatesMap}
-              isCredit={row.original.type === 'CREDIT'}
-            />
-          );
-        },
       },
       {
         id: 'actions',
         header: '',
       },
     ],
-    [displayCurrency, exchangeRatesMap, isExchangeRatesLoading],
+    [],
   );
 
   const table = useReactTable({
