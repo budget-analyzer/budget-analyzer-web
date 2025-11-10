@@ -88,11 +88,6 @@ export function TransactionTable({
     }
   }, [debouncedSearchValue, dispatch, onSearchChange]);
 
-  // Sync local state when Redux state changes externally (e.g., clear filters button)
-  useEffect(() => {
-    setLocalSearchValue(globalFilter ?? '');
-  }, [globalFilter]);
-
   // Handle save from row component
   const handleSaveTransaction = useCallback(
     (id: number, data: { description?: string; accountId?: string }) => {
