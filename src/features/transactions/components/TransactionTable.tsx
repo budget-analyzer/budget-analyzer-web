@@ -4,7 +4,6 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   ColumnDef,
   flexRender,
@@ -23,30 +22,20 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/DropdownMenu';
-import { TransactionAmountBadge } from '@/features/transactions/components/TransactionAmountBadge';
 import { DeleteTransactionModal } from '@/features/transactions/components/DeleteTransactionModal';
-import { formatLocalDate, isDateInRange, compareDates } from '@/utils/dates';
+import { TransactionAmountBadge } from '@/features/transactions/components/TransactionAmountBadge';
+import { EditableTransactionRow } from '@/features/transactions/components/EditableTransactionRow';
+import { formatLocalDate, compareDates } from '@/utils/dates';
 import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Search,
-  MoreVertical,
-  Pencil,
-  Trash2,
   ChevronsLeft,
   ChevronsRight,
   X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { motion } from 'framer-motion';
-import { fadeInVariants, fadeTransition } from '@/lib/animations';
 import { DateRangeFilter } from './DateRangeFilter';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import {
@@ -55,10 +44,12 @@ import {
   setTransactionTableGlobalFilter,
   setTransactionTableDateFilter,
 } from '@/store/uiSlice';
+import { useUpdateTransaction } from '@/hooks/useTransactions';
+import { formatApiError } from '@/utils/errorMessages';
+import { toast } from 'sonner';
 
 interface TransactionTableProps {
   transactions: Transaction[];
-  onFilteredRowsChange?: (filteredTransactions: Transaction[]) => void;
   onDateFilterChange?: (from: string | null, to: string | null) => void;
   onSearchChange?: (query: string) => void;
   displayCurrency: string;
@@ -68,7 +59,6 @@ interface TransactionTableProps {
 
 export function TransactionTable({
   transactions,
-  onFilteredRowsChange,
   onDateFilterChange,
   onSearchChange,
   displayCurrency,
@@ -86,6 +76,7 @@ export function TransactionTable({
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [localSearchValue, setLocalSearchValue] = useState(globalFilter ?? '');
   const navigate = useNavigate();
+  const { mutate: updateTransaction, isPending: isUpdating } = useUpdateTransaction();
 
   // Debounce search input: update Redux state 400ms after user stops typing
   useEffect(() => {
@@ -105,17 +96,39 @@ export function TransactionTable({
     setLocalSearchValue(globalFilter ?? '');
   }, [globalFilter]);
 
-  // Apply date filtering to transactions
-  const filteredByDate = useMemo(() => {
-    if (!dateFilter?.from || !dateFilter?.to) {
-      return transactions;
-    }
+  // Handle save from row component
+  const handleSaveTransaction = useCallback(
+    (id: number, data: { description?: string; accountId?: string }) => {
+      updateTransaction(
+        { id, data },
+        {
+          onSuccess: () => {
+            toast.success('Transaction updated');
+          },
+          onError: (error) => {
+            toast.error(formatApiError(error, 'Failed to update transaction'));
+          },
+        },
+      );
+    },
+    [updateTransaction],
+  );
 
-    return transactions.filter((transaction) => {
-      return isDateInRange(transaction.date, dateFilter.from!, dateFilter.to!);
-    });
-  }, [transactions, dateFilter]);
+  // Handle delete from row component
+  const handleDeleteTransaction = useCallback((transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+    setDeleteDialogOpen(true);
+  }, []);
 
+  // Handle row click to navigate to detail page
+  const handleRowClick = useCallback(
+    (transaction: Transaction) => {
+      navigate(`/transactions/${transaction.id}`);
+    },
+    [navigate],
+  );
+
+  // Define columns using TanStack Table
   const columns = useMemo<ColumnDef<Transaction>[]>(
     () => [
       {
@@ -140,7 +153,6 @@ export function TransactionTable({
       {
         accessorKey: 'description',
         header: 'Description',
-        cell: ({ row }) => <div className="max-w-md truncate">{row.getValue('description')}</div>,
       },
       {
         accessorKey: 'bankName',
@@ -198,60 +210,16 @@ export function TransactionTable({
       {
         id: 'actions',
         header: '',
-        cell: ({ row }) => {
-          const transaction = row.original;
-
-          return (
-            <div className="flex justify-end">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-transparent"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Edit transaction:', transaction.id);
-                    }}
-                  >
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    destructive
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTransactionToDelete(transaction);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          );
-        },
       },
     ],
     [displayCurrency, exchangeRatesMap, isExchangeRatesLoading],
   );
 
   const table = useReactTable({
-    data: filteredByDate,
+    data: transactions,
     columns,
     state: {
       sorting,
-      globalFilter,
       pagination: {
         pageIndex,
         pageSize,
@@ -261,10 +229,6 @@ export function TransactionTable({
       const newSorting = typeof updater === 'function' ? updater(sorting) : updater;
       dispatch(setTransactionTableSorting(newSorting));
     },
-    onGlobalFilterChange: (updater) => {
-      const newFilter = typeof updater === 'function' ? updater(globalFilter) : updater;
-      dispatch(setTransactionTableGlobalFilter(newFilter));
-    },
     onPaginationChange: (updater) => {
       const currentPagination = { pageIndex, pageSize };
       const newPagination = typeof updater === 'function' ? updater(currentPagination) : updater;
@@ -272,7 +236,6 @@ export function TransactionTable({
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     manualPagination: false,
     autoResetPageIndex: false,
@@ -282,14 +245,6 @@ export function TransactionTable({
   useEffect(() => {
     dispatch(setTransactionTablePageIndex(0));
   }, [globalFilter, dateFilter, dispatch]);
-
-  // Notify parent of filtered rows whenever they change
-  useEffect(() => {
-    if (onFilteredRowsChange) {
-      const filteredRows = table.getFilteredRowModel().rows.map((row) => row.original);
-      onFilteredRowsChange(filteredRows);
-    }
-  }, [table, onFilteredRowsChange, globalFilter, filteredByDate]);
 
   const hasActiveDateFilters = dateFilter?.from || dateFilter?.to;
 
@@ -370,23 +325,21 @@ export function TransactionTable({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <motion.tr
-                  key={row.id}
-                  variants={fadeInVariants}
-                  initial="initial"
-                  animate="animate"
-                  transition={fadeTransition}
-                  onClick={() => navigate(`/transactions/${row.original.id}`)}
-                  className="cursor-pointer border-b transition-colors data-[state=selected]:bg-muted"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </motion.tr>
-              ))
+              table
+                .getRowModel()
+                .rows.map((row) => (
+                  <EditableTransactionRow
+                    key={row.id}
+                    transaction={row.original}
+                    displayCurrency={displayCurrency}
+                    exchangeRatesMap={exchangeRatesMap}
+                    isExchangeRatesLoading={isExchangeRatesLoading}
+                    onSave={handleSaveTransaction}
+                    onDelete={handleDeleteTransaction}
+                    onRowClick={handleRowClick}
+                    isUpdating={isUpdating}
+                  />
+                ))
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -398,16 +351,16 @@ export function TransactionTable({
         </Table>
       </div>
 
-      {table.getFilteredRowModel().rows.length > 0 && (
+      {table.getRowModel().rows.length > 0 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             Showing{' '}
             {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
             {Math.min(
               (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length,
+              transactions.length,
             )}{' '}
-            of {table.getFilteredRowModel().rows.length} transactions
+            of {transactions.length} transactions
           </div>
           <div className="flex items-center gap-2">
             <Button
