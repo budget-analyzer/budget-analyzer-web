@@ -7,7 +7,7 @@ A comprehensive guide to the testing setup and best practices for the Budget Ana
 ## Testing Stack
 
 - **Test Runner:** Vitest (fast, Vite-native)
-- **Testing Library:** React Testing Library (@testing-library/react)
+- **Testing Library:** React Testing Library (`@testing-library/react`)
 - **Assertions:** Vitest matchers + jest-dom matchers
 - **API Mocking:** MSW (Mock Service Worker)
 - **Environment:** jsdom (simulates browser environment in Node)
