@@ -5,6 +5,8 @@
   "workspaceFolder": "/workspace/budget-analyzer-web",
   "shutdownAction": "none",
   
+  "initializeCommand": "bash ${localWorkspaceFolder}/../orchestration/claude-code-sandbox/setup-env.sh",
+  
   "customizations": {
     "vscode": {
       "extensions": [
