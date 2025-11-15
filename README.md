@@ -1,183 +1,153 @@
-# README.md
+# Budget Analyzer Web
 
-# Budget Analyzer Client
+> **⚠️ Work in Progress**: This project is under active development. Features and documentation are subject to change.
 
-A modern, fully-featured React application for managing and analyzing financial transactions. Built with React 19, TypeScript, and Vite, this application demonstrates best practices for modern frontend development.
+Modern React web application for Budget Analyzer - a personal finance management tool for tracking transactions, analyzing spending patterns, and managing budgets.
 
-## 🚀 Features
+## Overview
+
+Budget Analyzer Web is a full-featured React application that provides:
 
 - **Transaction Management**: View, search, and filter financial transactions
-- **Detailed Analytics**: Real-time statistics including credits, debits, and net balance
-- **Advanced Table**: Sortable, filterable, and paginated transaction table using TanStack Table
-- **Responsive Design**: Mobile-first design with Tailwind CSS
-- **Dark Mode**: Toggle between light and dark themes
-- **Error Handling**: Comprehensive error handling with retry functionality
-- **Type Safety**: Full TypeScript support with generated types from OpenAPI spec
-- **Modern Architecture**: Clean separation of concerns with hooks, components, and API layers
+- **Real-time Analytics**: Credits, debits, net balance, and spending insights
+- **Multi-currency Support**: Handle transactions in different currencies
+- **Responsive Design**: Mobile-first design with dark mode support
+- **Advanced Table**: Sortable, filterable, and paginated transaction views
 
-## 📋 Tech Stack
+## Technology Stack
 
-- **React 19** - Latest React with modern hooks and concurrent features
-- **TypeScript** - Type-safe development
-- **Vite** - Lightning-fast build tool
-- **React Router v7** - Client-side routing
-- **TanStack Query (React Query)** - Async state management and caching
-- **Redux Toolkit** - Global UI state management
-- **TanStack Table** - Headless table library
-- **Tailwind CSS** - Utility-first CSS framework
-- **Shadcn/UI** - Beautiful, accessible component library
-- **Framer Motion** - Smooth animations
-- **Axios** - HTTP client with interceptors
-- **Vitest** - Fast unit testing
-- **date-fns** - Modern date utility library
+- **React 19** with modern hooks and concurrent features
+- **TypeScript** for type safety
+- **Vite** for lightning-fast development and builds
+- **React Router v7** for client-side routing
+- **TanStack Query (React Query)** for async state management
+- **Redux Toolkit** for UI state
+- **TanStack Table** for advanced table features
+- **Tailwind CSS** for styling
+- **Shadcn/UI** for accessible components
+- **Axios** for API communication
+- **Vitest** for testing
 
-## 🛠️ Installation
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm/yarn/pnpm
+- Node.js 18+
+- npm, yarn, or pnpm
 
-### Setup
+### Installation
 
-1. **Clone or create the project directory:**
 ```bash
-mkdir budget-analyzer-web
-cd budget-analyzer-web
-```
-
-2. **Copy all the generated files to the project directory**
-
-3. **Install dependencies:**
-```bash
+# Install dependencies
 npm install
-```
 
-4. **Configure environment variables:**
-
-Copy the `.env.example` to `.env`:
-```bash
+# Configure environment
 cp .env.example .env
-```
 
-Edit `.env` to configure your API endpoint:
-```env
-VITE_API_BASE_URL=http://localhost:8080/budget-analyzer-api
-VITE_USE_MOCK_DATA=true
-```
-
-**Note:** Set `VITE_USE_MOCK_DATA=false` when connecting to a real backend.
-
-5. **Start the development server:**
-```bash
+# Start development server
 npm run dev
 ```
 
 The application will open at `http://localhost:3000`
 
-## 📁 Project Structure
-```
-src/
-├── api/                    # API client and endpoints
-│   ├── client.ts          # Axios instance with interceptors
-│   ├── transactionApi.ts  # Transaction API methods
-│   └── mockData.ts        # Mock data for development
-├── components/            # Reusable components
-│   ├── ui/               # Base UI components (Button, Card, etc.)
-│   ├── ErrorBanner.tsx   # Error display component
-│   ├── ErrorBoundary.tsx # Error boundary wrapper
-│   ├── Layout.tsx        # Main layout component
-│   ├── LoadingSpinner.tsx # Loading indicator
-│   ├── ThemeToggle.tsx   # Dark mode toggle
-│   ├── TransactionRow.tsx # Table row component
-│   └── TransactionTable.tsx # Main table component
-├── hooks/                 # Custom React hooks
-│   └── useTransactions.ts # Transaction data hook
-├── lib/                   # Utility functions
-│   └── utils.ts          # Helper functions
-├── pages/                 # Page components
-│   ├── TransactionsPage.tsx       # Main transactions list
-│   └── TransactionDetailPage.tsx  # Transaction details
-├── store/                 # Redux store
-│   ├── index.ts          # Store configuration
-│   ├── uiSlice.ts        # UI state slice
-│   └── hooks.ts          # Typed Redux hooks
-├── test/                  # Test files
-│   ├── setup.ts          # Test configuration
-│   ├── Button.test.tsx   # Component tests
-│   └── useTransactions.test.tsx # Hook tests
-├── types/                 # TypeScript types
-│   ├── transaction.ts    # Transaction types
-│   └── apiError.ts       # API error types
-├── App.tsx               # Main app component
-├── main.tsx              # Application entry point
-└── index.css             # Global styles
+### Environment Configuration
+
+Edit `.env` to configure your API endpoint:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_USE_MOCK_DATA=true
 ```
 
-## 🔧 Available Scripts
+Set `VITE_USE_MOCK_DATA=false` when connecting to a real backend.
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run format` - Format code with Prettier
-- `npm test` - Run tests
-- `npm run test:ui` - Run tests with UI
-
-## 🎨 Features Walkthrough
+## Features
 
 ### Mock Data Mode
 
-By default, the app runs with mock data. This allows you to:
-- Test the UI without a backend
-- Develop and demo features independently
-- Simulate API errors and edge cases
-
-To enable real API calls, set `VITE_USE_MOCK_DATA=false` in your `.env` file.
+By default, the app runs with mock data for:
+- Testing UI without a backend
+- Independent feature development
+- Simulating API errors and edge cases
 
 ### Transaction List
 
-The main page displays:
-- Summary cards with total transactions, credits, debits, and net balance
+- Summary cards with financial statistics
 - Searchable and sortable transaction table
 - Pagination controls
-- Click any row to view details
-
-### Transaction Details
-
-Click any transaction to see:
-- Full transaction information
-- Account and bank details
-- System metadata (created/updated timestamps)
-
-### Error Handling
-
-The app gracefully handles:
-- Network errors (503 Service Unavailable)
-- Not found errors (404)
-- Server errors (500)
-- All errors display user-friendly messages with retry options
+- Click rows to view details
 
 ### Dark Mode
 
-Toggle dark mode using the sun/moon icon in the header. The preference is saved to localStorage.
+Toggle between light and dark themes using the theme toggle. Preference is saved to localStorage.
 
-## 🔌 API Integration
+### Error Handling
 
-### Connecting to Your Backend
+Comprehensive error handling with:
+- Network error recovery
+- User-friendly error messages
+- Retry functionality
+- Error boundaries for graceful degradation
 
-1. Update `.env`:
+## Development
+
+### Available Scripts
+
+```bash
+npm run dev       # Start development server
+npm run build     # Build for production
+npm run preview   # Preview production build
+npm run lint      # Run ESLint
+npm run format    # Format with Prettier
+npm test          # Run tests
+npm run test:ui   # Run tests with UI
+```
+
+### Project Structure
+
+```
+src/
+├── api/                    # API client and endpoints
+├── components/            # Reusable components
+│   ├── ui/               # Base UI components
+│   └── ...               # Feature components
+├── hooks/                # Custom React hooks
+├── pages/                # Page components
+├── store/                # Redux store
+├── types/                # TypeScript types
+└── lib/                  # Utilities
+```
+
+### Code Quality
+
+- **ESLint** for code quality
+- **Prettier** for formatting
+- **TypeScript** for type safety
+- **Vitest** for unit testing
+- **React Testing Library** for component testing
+
+## API Integration
+
+### Connecting to Backend
+
+Update `.env` to point to your backend:
+
 ```env
-VITE_API_BASE_URL=https://api.bleurubin.com
+VITE_API_BASE_URL=http://localhost:8080/api
 VITE_USE_MOCK_DATA=false
 ```
 
-2. Ensure your backend implements the OpenAPI spec endpoints:
-   - `GET /transactions` - List all transactions
-   - `GET /transactions/{id}` - Get single transaction
+### Expected Endpoints
 
-### API Error Format
+- `GET /transactions` - List all transactions
+- `GET /transactions/{id}` - Get single transaction
+- `GET /currencies` - List currencies
+- `GET /exchange-rates` - Get exchange rates
+
+### Error Format
 
 The app expects RFC 7807-inspired error responses:
+
 ```json
 {
   "type": "not_found",
@@ -189,64 +159,57 @@ The app expects RFC 7807-inspired error responses:
 }
 ```
 
-## 🧪 Testing
+## Architecture
 
-Run tests with:
-```bash
-npm test
-```
+### State Management
 
-The project includes:
-- Component tests using React Testing Library
-- Hook tests with React Query
-- Vitest configuration for fast test execution
-
-## 🏗️ Architecture Decisions
-
-### React Query vs Redux
-
-- **React Query**: Used for server state (API data, caching, loading states)
-- **Redux Toolkit**: Used for client state (theme, UI preferences, selected items)
+- **React Query**: Server state (API data, caching, loading states)
+- **Redux Toolkit**: Client state (theme, UI preferences)
 
 This separation provides optimal performance and developer experience.
 
-### Why Vite?
+### Component Strategy
 
-Vite offers:
-- Instant server start
-- Lightning-fast HMR
-- Optimized builds
-- Native ESM support
-
-### Component Library Strategy
-
-Using Shadcn/UI provides:
+Using Shadcn/UI for:
 - Copy-paste components (no package bloat)
 - Full customization control
 - Tailwind CSS integration
-- Accessibility built-in
+- Built-in accessibility
 
-## 🚀 Deployment
+## Deployment
 
 Build for production:
+
 ```bash
 npm run build
 ```
 
-The optimized files will be in the `dist/` directory. Deploy to:
+The optimized files will be in `dist/`. Deploy to any static hosting:
 - Vercel
 - Netlify
 - AWS S3 + CloudFront
-- Any static hosting service
+- GitHub Pages
 
-## 📝 License
+## Integration
+
+This frontend integrates with the Budget Analyzer microservices:
+- **Transaction Service** for transaction data
+- **Currency Service** for currency and exchange rates
+- **API Gateway** (NGINX) for unified routing
+
+See the [orchestration repository](https://github.com/budget-analyzer/orchestration) for full system setup.
+
+## Related Repositories
+
+- **Orchestration**: https://github.com/budget-analyzer/orchestration
+- **Service Common**: https://github.com/budget-analyzer/service-common
+- **Transaction Service**: https://github.com/budget-analyzer/transaction-service
+- **Currency Service**: https://github.com/budget-analyzer/currency-service
+
+## License
 
 MIT
 
-## 👤 Author
+## Contributing
 
-Bleu Rubin - support@bleurubin.com
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
+This project is currently in early development. Contributions, issues, and feature requests are welcome as we build toward a stable release.
