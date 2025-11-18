@@ -1,40 +1,47 @@
-import { apiClient } from './client';
-import type { LoginRequest, LoginResponse, User } from '@/types/auth';
+import axios from 'axios';
+import type { User } from '@/types/auth';
 
 /**
  * Auth API endpoints
- * TODO: Update these endpoints to match your backend API
+ *
+ * Authentication is handled by the Session Gateway (port 8081).
+ * All requests go through the Session Gateway which manages:
+ * - OAuth2/OIDC flows with Auth0
+ * - Session cookies (HttpOnly, Secure, SameSite)
+ * - JWT token storage in Redis
+ * - Automatic token refresh
+ *
+ * Frontend never sees JWTs - they're managed server-side by Session Gateway.
  */
 
-/**
- * Login with email and password
- */
-export async function login(credentials: LoginRequest): Promise<LoginResponse> {
-  const response = await apiClient.post<LoginResponse>('/v1/auth/login', credentials);
-  return response.data;
-}
-
-/**
- * Logout (invalidate token on backend)
- */
-export async function logout(): Promise<void> {
-  await apiClient.post('/v1/auth/logout');
-}
+// Create a separate axios instance for auth that includes credentials
+// and uses absolute paths (not the API base URL)
+const authClient = axios.create({
+  baseURL: '/', // Root of Session Gateway
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, // Include session cookies in requests
+  timeout: 10000,
+});
 
 /**
  * Get current user profile
- * Used to validate token and fetch user data
+ * Calls Session Gateway /user endpoint which validates session cookie
+ * and returns user info extracted from JWT
  */
 export async function getCurrentUser(): Promise<User> {
-  const response = await apiClient.get<User>('/v1/auth/me');
+  const response = await authClient.get<User>('/user');
   return response.data;
 }
 
 /**
- * Refresh access token
- * TODO: Implement if you're using refresh tokens
+ * Logout
+ * Calls Session Gateway /logout endpoint which:
+ * - Invalidates Redis session
+ * - Clears session cookie
+ * - Redirects to Auth0 logout (then back to app)
  */
-export async function refreshToken(): Promise<string> {
-  const response = await apiClient.post<{ token: string }>('/v1/auth/refresh');
-  return response.data.token;
+export async function logout(): Promise<void> {
+  await authClient.post('/logout');
 }

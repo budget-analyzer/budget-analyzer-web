@@ -13,6 +13,7 @@ Budget Analyzer Web is a full-featured React application that provides:
 - **Multi-currency Support**: Handle transactions in different currencies
 - **Responsive Design**: Mobile-first design with dark mode support
 - **Advanced Table**: Sortable, filterable, and paginated transaction views
+- **Secure Authentication**: OAuth2/OIDC via Auth0 with session-based security
 
 ## Technology Stack
 
@@ -51,7 +52,7 @@ cp .env.example .env
 npm run dev
 ```
 
-The application will open at `http://localhost:8080` (served through NGINX gateway)
+**IMPORTANT**: Access the app via Session Gateway at `http://localhost:8081`, NOT directly via Vite (`http://localhost:3000`).
 
 ### Environment Configuration
 
@@ -59,12 +60,27 @@ Edit `.env` to configure your API endpoint:
 
 ```env
 VITE_API_BASE_URL=/api
-VITE_USE_MOCK_DATA=true
 ```
 
-**Note**: The frontend development server runs on port 3000, but NGINX gateway serves it on port 8080. Use relative path `/api` for API calls to work through the gateway.
+### Development vs Production URLs
 
-Set `VITE_USE_MOCK_DATA=false` when connecting to a real backend.
+**Development:**
+- Access app: `http://localhost:8081` (Session Gateway)
+- Request flow: Browser → Session Gateway (8081) → NGINX (8080) → Vite (3000)
+- API calls: Browser → Session Gateway (8081) → NGINX (8080) → Backend services
+
+**Production:**
+- Access app: `https://budgetanalyzer.com` (Load Balancer)
+- Request flow: Browser → Load Balancer → Session Gateway → NGINX → Static files
+- API calls: Browser → Load Balancer → Session Gateway → NGINX → Backend services
+
+**Why Session Gateway?**
+- Handles OAuth2 authentication with Auth0
+- Manages session cookies (HttpOnly, Secure, SameSite)
+- Stores JWTs server-side in Redis (never exposed to browser)
+- Automatically adds JWTs to API requests
+
+See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for complete authentication guide.
 
 ## Features
 

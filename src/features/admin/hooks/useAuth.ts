@@ -1,29 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import type { User, UserRole } from '@/types/auth';
 import * as authApi from '@/api/auth';
-import type { User, LoginRequest, UserRole } from '@/types/auth';
-import { getToken, setToken, removeToken, getUserFromToken } from '@/utils/jwt';
-
-// DEV MODE: Set to true to bypass authentication for development/demo
-const DEV_MODE_BYPASS_AUTH = true;
-
-// Mock admin user for development
-const DEV_MOCK_USER: User = {
-  id: 'dev-user-1',
-  email: 'admin@budgetanalyzer.dev',
-  name: 'Dev Admin',
-  roles: ['USER', 'ADMIN', 'SUPER_ADMIN'],
-};
 
 /**
  * Authentication hook
  * Manages user authentication state and provides auth operations
+ *
+ * Authentication flow:
+ * 1. User clicks login -> redirected to Session Gateway OAuth flow
+ * 2. Session Gateway handles OAuth with Auth0, stores JWT in Redis
+ * 3. Session Gateway sets HttpOnly session cookie in browser
+ * 4. Frontend checks /user endpoint to get current user info
+ * 5. All API calls include session cookie automatically (credentials: 'include')
+ * 6. Session Gateway adds JWT to requests before forwarding to backend
  */
 export function useAuth() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
-  // Get current user from token or API
+  // Get current user from Session Gateway
   const {
     data: user,
     isLoading,
@@ -31,62 +25,41 @@ export function useAuth() {
   } = useQuery<User | null>({
     queryKey: ['auth', 'currentUser'],
     queryFn: async () => {
-      // DEV MODE: Return mock user to bypass auth
-      if (DEV_MODE_BYPASS_AUTH) {
-        return DEV_MOCK_USER;
-      }
-
-      const token = getToken();
-      if (!token) {
+      try {
+        // Call Session Gateway /user endpoint to get current user
+        // This validates the session cookie and returns user info
+        const user = await authApi.getCurrentUser();
+        return user;
+      } catch (error) {
+        // No valid session - user is not authenticated
         return null;
       }
-
-      // First try to get user from token (fast, offline-capable)
-      const userFromToken = getUserFromToken(token);
-      if (userFromToken) {
-        // Optionally validate token with backend
-        // TODO: Uncomment when backend is ready
-        // try {
-        //   const userFromApi = await authApi.getCurrentUser();
-        //   return userFromApi;
-        // } catch (error) {
-        //   // Token invalid, clear it
-        //   removeToken();
-        //   return null;
-        // }
-        return userFromToken;
-      }
-
-      return null;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false, // Don't retry on auth failures
   });
 
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: (credentials: LoginRequest) => authApi.login(credentials),
-    onSuccess: (data) => {
-      setToken(data.token);
-      queryClient.setQueryData(['auth', 'currentUser'], data.user);
-      navigate('/admin');
-    },
-    onError: (error) => {
-      console.error('Login failed:', error);
-    },
-  });
+  // Login - redirect to Session Gateway OAuth flow
+  const login = () => {
+    // Redirect to Session Gateway OAuth2 authorization endpoint
+    // Session Gateway will:
+    // 1. Redirect to Auth0 for authentication
+    // 2. Handle OAuth callback
+    // 3. Store tokens in Redis
+    // 4. Set session cookie
+    // 5. Redirect back to frontend
+    window.location.href = '/oauth2/authorization/auth0';
+  };
 
   // Logout mutation
   const logoutMutation = useMutation({
-    mutationFn: async () => {
-      // TODO: Call backend to invalidate token when implemented
-      // await authApi.logout();
-    },
+    mutationFn: () => authApi.logout(),
     onSuccess: () => {
-      removeToken();
+      // Clear user data from cache
       queryClient.setQueryData(['auth', 'currentUser'], null);
       queryClient.clear(); // Clear all cached data
-      navigate('/login');
+      // Redirect to home page after logout
+      window.location.href = '/';
     },
   });
 
@@ -98,15 +71,14 @@ export function useAuth() {
     error,
 
     // Operations
-    login: loginMutation.mutate,
-    logout: logoutMutation.mutate,
-    isLoggingIn: loginMutation.isPending,
+    login,
+    logout: () => logoutMutation.mutate(),
     isLoggingOut: logoutMutation.isPending,
 
     // Authorization helpers
-    hasRole: (role: UserRole) => user?.roles.includes(role) ?? false,
-    hasAnyRole: (...roles: UserRole[]) => roles.some((role) => user?.roles.includes(role)),
-    hasAllRoles: (...roles: UserRole[]) => roles.every((role) => user?.roles.includes(role)),
+    hasRole: (role: UserRole) => user?.roles?.includes(role) ?? false,
+    hasAnyRole: (...roles: UserRole[]) => roles.some((role) => user?.roles?.includes(role)),
+    hasAllRoles: (...roles: UserRole[]) => roles.every((role) => user?.roles?.includes(role)),
   };
 }
 

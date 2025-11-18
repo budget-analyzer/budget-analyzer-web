@@ -15,6 +15,9 @@ import { CurrenciesListPage } from '@/features/admin/currencies/pages/Currencies
 import { CurrencyCreatePage } from '@/features/admin/currencies/pages/CurrencyCreatePage';
 import { CurrencyEditPage } from '@/features/admin/currencies/pages/CurrencyEditPage';
 
+// Auth imports
+import { LoginPage } from '@/features/auth/pages/LoginPage';
+
 function App() {
   return (
     <ErrorBoundary>
@@ -25,6 +28,9 @@ function App() {
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="transactions/:id" element={<TransactionDetailPage />} />
         </Route>
+
+        {/* Auth routes */}
+        <Route path="/login" element={<LoginPage />} />
 
         {/* Admin routes - protected by authentication and ADMIN role */}
         <Route
