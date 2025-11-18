@@ -1,7 +1,19 @@
 // src/api/client.ts
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import { ApiError, ApiErrorResponse } from '@/types/apiError';
-import { getValidToken, removeToken } from '@/utils/jwt';
+
+/**
+ * API Client Configuration
+ *
+ * Authentication flow:
+ * - All requests include session cookies automatically (withCredentials: true)
+ * - Session Gateway validates session cookie
+ * - Session Gateway adds JWT to Authorization header
+ * - Session Gateway forwards request to NGINX
+ * - NGINX validates JWT and routes to backend services
+ *
+ * No need to manually add Authorization header - Session Gateway handles it.
+ */
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -10,31 +22,18 @@ export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Include session cookies in all requests
   timeout: 10000,
 });
-
-// Request interceptor - inject JWT token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = getValidToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiErrorResponse>) => {
-    // Handle 401 Unauthorized - clear token and redirect to login
+    // Handle 401 Unauthorized - session expired or invalid
     if (error.response?.status === 401) {
-      removeToken();
-      // Redirect will be handled by React Query error boundaries or useAuth hook
+      // Redirect to login - Session Gateway will handle OAuth flow
+      window.location.href = '/oauth2/authorization/auth0';
     }
 
     if (error.response?.data) {
