@@ -29,6 +29,7 @@ export default defineConfig({
   server: {
     port: 3000,
     host: '0.0.0.0', // Allow Docker to access the dev server
+    allowedHosts: true, // Allow all hosts (needed for Docker/NGINX proxy access)
     // Note: In dev, access the app via http://localhost:8081 (Session Gateway)
     // not http://localhost:3000 (Vite dev server directly)
   },
